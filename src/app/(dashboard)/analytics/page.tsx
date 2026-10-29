@@ -14,7 +14,7 @@ import { RANGES, keywordName, readWindow } from './window';
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Análisis' };
 
-  /** One window, four reports: overview, breakdowns, share of voice and reviews. */
+/** One window, four reports: overview, breakdowns, share of voice and reviews (Inerpy's dashboard recipe). */
 export default async function Analytics({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
   const { query, tab: asked, range } = readWindow(params);
@@ -39,7 +39,11 @@ export default async function Analytics({ searchParams }: { searchParams: Promis
       <PageHeader
         title="Análisis"
         description={`Del ${day(summary.window.from)} al ${day(summary.window.to)} · ${summary.window.days} días, comparados con los ${summary.window.days} días anteriores.`}
-        actions={<RangeLinks current={range} options={RANGES} href={(value) => withParams('/analytics', params, { range: value, from: undefined, to: undefined })} />}
+        actions={
+          <div role="group" aria-label="Periodo">
+            <RangeLinks current={range} options={RANGES} href={(value) => withParams('/analytics', params, { range: value, from: undefined, to: undefined })} />
+          </div>
+        }
       />
 
       <UrlFilters

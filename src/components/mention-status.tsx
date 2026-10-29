@@ -11,6 +11,16 @@ import { Badge } from '@/components/ui/badge';
 
 const EVENT = 'agora:mention-status';
 
+const STATUS_LABELS: Record<string, string> = { new: 'Nuevo', open: 'Abierto', done: 'Resuelto', snoozed: 'Pospuesto', ignored: 'Ignorado' };
+/** The kit's badge tones (components/ui `Badge`), repeated here because this is a client module: open in the brand, resolved green, snoozed amber, ignored grey. */
+const STATUS_CLASSES: Record<string, string> = {
+  new: 'bg-brand-soft text-primary',
+  open: 'bg-brand-soft text-primary',
+  done: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400',
+  snoozed: 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400',
+  ignored: 'bg-secondary text-muted-foreground',
+};
+
 /** `null` puts the badges back to what the server last said (a failed save). */
 export function announceStatus(ids: string[], status: string | null) {
   window.dispatchEvent(new CustomEvent(EVENT, { detail: { ids, status } }));
@@ -28,8 +38,8 @@ export function MentionStatus({ id, status }: { id: string; status: string }) {
     return () => window.removeEventListener(EVENT, on);
   }, [id, status]);
   return (
-    <Badge variant="outline" className="capitalize">
-      {({ new: 'Nuevo', open: 'Abierto', done: 'Resuelto', snoozed: 'Pospuesto', ignored: 'Ignorado' } as Record<string, string>)[shown] ?? shown}
+    <Badge variant="secondary" className={STATUS_CLASSES[shown] ?? STATUS_CLASSES.ignored}>
+      {STATUS_LABELS[shown] ?? shown}
     </Badge>
   );
 }

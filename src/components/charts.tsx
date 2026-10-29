@@ -13,7 +13,6 @@ import { Progress } from '@/components/ui/progress';
 import { CHART_COLORS } from '@/lib/chart-colors';
 import { cn } from '@/lib/utils';
 
-
 const compact = (n: number) => new Intl.NumberFormat('es-MX', { notation: 'compact', maximumFractionDigits: 1 }).format(Math.round(n));
 
 /** Fecha corta para una fecha o una hora ISO. */
@@ -22,7 +21,9 @@ const shortDay = (value: string) => {
   return Number.isNaN(d.getTime()) ? value : new Intl.DateTimeFormat('es-MX', { month: 'short', day: 'numeric', timeZone: 'UTC' }).format(d);
 };
 
-const empty = <p className="text-sm text-muted-foreground">No hay datos en este periodo.</p>;
+/** The fallback when a chart gets no rows: the kit's ChartEmpty look (ui/index imports this file, so it is restated here). */
+const emptyClass = 'flex min-h-[220px] flex-1 items-center justify-center rounded-lg border border-dashed px-4 text-center text-sm text-balance text-muted-foreground';
+const empty = <div className={emptyClass}>No hay datos en este periodo.</div>;
 
 type Series = { name: string; color: string; values: number[]; dashed?: boolean };
 
@@ -103,7 +104,7 @@ export function Sparkline({ values, tone = 'accent', className }: { values: numb
 /** One bar split into shares (share of voice), with the shadcn legend. */
 export function ShareBar({ items }: { items: Array<{ label: string; value: number; color: string; href?: string }> }) {
   const total = items.reduce((sum, i) => sum + i.value, 0);
-  if (total === 0) return <p className="text-sm text-muted-foreground">No hay menciones de candidatos o adversarios en este periodo.</p>;
+  if (total === 0) return <div className={emptyClass}>No hay menciones de candidatos o adversarios en este periodo.</div>;
   const config: ChartConfig = {};
   items.forEach((item, i) => (config[`s${i}`] = { label: item.label, color: item.color }));
   const data = [Object.fromEntries(items.map((item, i) => [`s${i}`, item.value]))];
@@ -123,12 +124,12 @@ export function ShareBar({ items }: { items: Array<{ label: string; value: numbe
         {items.map((item) => {
           const body = (
             <>
-              <span className="size-2 rounded-[2px]" style={{ background: item.color }} />
+              <span aria-hidden className="size-2 shrink-0 rounded-[2px]" style={{ background: item.color }} />
               {item.label} <span className="text-foreground tabular-nums">{item.value.toFixed(1)}%</span>
             </>
           );
           return item.href ? (
-            <Link key={item.label} href={item.href} className="flex items-center gap-1.5 hover:underline">{body}</Link>
+            <Link key={item.label} href={item.href} className="flex items-center gap-1.5 rounded-sm hover:text-foreground hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none">{body}</Link>
           ) : (
             <span key={item.label} className="flex items-center gap-1.5">{body}</span>
           );
@@ -149,7 +150,7 @@ export function BarList({ items, format = 'compact' }: { items: Array<{ label: R
           <div className="flex items-center justify-between gap-2">
             <span className="flex min-w-0 items-center gap-2">
               {item.icon}
-              {item.href ? <Link href={item.href} className="truncate hover:underline">{item.label}</Link> : <span className="truncate">{item.label}</span>}
+              {item.href ? <Link href={item.href} className="truncate rounded-sm hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none">{item.label}</Link> : <span className="truncate">{item.label}</span>}
             </span>
             <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{format === 'plain' ? item.value.toLocaleString('es-MX') : compact(item.value)}</span>
           </div>

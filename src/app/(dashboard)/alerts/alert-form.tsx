@@ -1,4 +1,4 @@
-/** One form for a new rule and an existing one: what it watches, when it sends, where. */
+/** One form for a new rule and an existing one, in reading order: the rule, what it watches, when it sends, where. */
 import type { Alert, Channel, Group, Keyword } from '@mentio-dev/sdk';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -20,10 +20,11 @@ function timezones() {
   }
 }
 
+/** One block of the rule: a card on the page, a titled section in a drawer (globals.css). */
 function Section({ title, description, children }: { title: string; description?: ReactNode; children: ReactNode }) {
   return (
     <Card title={title} description={description}>
-      <div className="space-y-4">{children}</div>
+      <div className="grid gap-4">{children}</div>
     </Card>
   );
 }
@@ -45,10 +46,10 @@ export function AlertForm({
   const s = alert?.schedule ?? null;
   const joined = (values?: string[]) => (values ?? []).join(', ');
   return (
-    <ActionForm action={action} className="space-y-6">
+    <ActionForm action={action} className="grid gap-4">
       {alert ? <input type="hidden" name="id" value={alert.id} /> : null}
 
-      <Section title="Rule">
+      <Section title="Regla" description="Cómo se llama la alerta y si está enviando avisos.">
         <div className="grid gap-4 @lg:grid-cols-2">
           <Field label="Nombre">
             <Input name="name" required maxLength={80} defaultValue={alert?.name} placeholder="Menciones negativas de la candidatura" />
@@ -58,40 +59,6 @@ export function AlertForm({
           </Field>
         </div>
         <SwitchRow name="enabled" defaultChecked={alert?.enabled ?? true} label="Activa" hint="Una regla desactivada conserva sus ajustes, pero no envía avisos." />
-      </Section>
-
-      <Section title="Cuándo se envía" description="El envío inmediato avisa cuando llega cada mención. El resumen periódico reúne las menciones y se envía a la hora local indicada.">
-        <div className="grid gap-4 @lg:grid-cols-2">
-          <Field group label="Frecuencia" className="@lg:col-span-2">
-            <Segmented
-              name="mode"
-              defaultValue={alert?.mode ?? 'instant'}
-              options={MODES.map((m) => ({ value: m, label: MODE_LABELS[m], description: m === 'instant' ? 'Cada mención se envía al momento.' : m === 'daily' ? 'Un resumen al día, a la hora indicada.' : 'Un resumen a la semana, el día y la hora indicados.' }))}
-            />
-          </Field>
-          <Field label="Día de la semana" hint="Solo para resúmenes semanales.">
-            <Select name="weekday" defaultValue={String(s?.weekday ?? 1)} options={WEEKDAYS.map((d, i) => [String(i), d] as const)} />
-          </Field>
-          <Field label="Hora" hint="Para resúmenes diarios y semanales.">
-            <Input type="time" name="time" defaultValue={s ? timeOf(s) : '09:00'} />
-          </Field>
-          <Field label="Zona horaria" hint="Una zona IANA, como America/Mexico_City.">
-            <Combobox name="timezone" options={timezones()} defaultValue={s?.timezone ?? 'UTC'} placeholder="Buscar una zona" />
-          </Field>
-        </div>
-        <SwitchRow name="skipEmpty" defaultChecked={s?.skipEmpty ?? true} label="Omitir el resumen si no hay coincidencias" />
-      </Section>
-
-      <Section title="Canales de envío" description={<>Elige uno o más canales. <Link href="/channels/new" className="text-primary hover:underline">Agregar un canal</Link></>}>
-        {channels.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Aún no hay canales. Puedes guardar la regla y conectarle canales después.</p>
-        ) : (
-          <CheckboxGroup
-            name="channelIds"
-            options={channels.map((c) => [c.id, `${c.label} (${KIND_LABELS[c.kind]})`] as const)}
-            selected={alert?.channels.map((c) => c.id) ?? []}
-          />
-        )}
       </Section>
 
       <Section title="Qué monitorea" description="Deben cumplirse todas las condiciones que configures. Deja un campo vacío para aceptar cualquier valor.">
@@ -120,7 +87,41 @@ export function AlertForm({
         )}
       </Section>
 
-      <div data-slot="form-actions" className="flex justify-end">
+      <Section title="Cuándo se envía" description="El envío inmediato avisa cuando llega cada mención. El resumen periódico reúne las menciones y se envía a la hora local indicada.">
+        <div className="grid gap-4 @lg:grid-cols-2">
+          <Field group label="Frecuencia" className="@lg:col-span-2">
+            <Segmented
+              name="mode"
+              defaultValue={alert?.mode ?? 'instant'}
+              options={MODES.map((m) => ({ value: m, label: MODE_LABELS[m], description: m === 'instant' ? 'Cada mención se envía al momento.' : m === 'daily' ? 'Un resumen al día, a la hora indicada.' : 'Un resumen a la semana, el día y la hora indicados.' }))}
+            />
+          </Field>
+          <Field label="Día de la semana" hint="Solo para resúmenes semanales.">
+            <Select name="weekday" defaultValue={String(s?.weekday ?? 1)} options={WEEKDAYS.map((d, i) => [String(i), d] as const)} />
+          </Field>
+          <Field label="Hora" hint="Para resúmenes diarios y semanales.">
+            <Input type="time" name="time" defaultValue={s ? timeOf(s) : '09:00'} />
+          </Field>
+          <Field label="Zona horaria" hint="Una zona IANA, como America/Mexico_City.">
+            <Combobox name="timezone" options={timezones()} defaultValue={s?.timezone ?? 'UTC'} placeholder="Buscar una zona" />
+          </Field>
+        </div>
+        <SwitchRow name="skipEmpty" defaultChecked={s?.skipEmpty ?? true} label="Omitir el resumen si no hay coincidencias" />
+      </Section>
+
+      <Section title="Canales de envío" description={<>Elige uno o más canales. <Link href="/channels/new" className="font-medium text-primary underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none">Agregar un canal</Link></>}>
+        {channels.length === 0 ? (
+          <p className="rounded-lg border border-dashed px-4 py-5 text-center text-sm text-balance text-muted-foreground">Aún no hay canales. Puedes guardar la regla y conectarle canales después.</p>
+        ) : (
+          <CheckboxGroup
+            name="channelIds"
+            options={channels.map((c) => [c.id, `${c.label} (${KIND_LABELS[c.kind]})`] as const)}
+            selected={alert?.channels.map((c) => c.id) ?? []}
+          />
+        )}
+      </Section>
+
+      <div data-slot="form-actions" className="flex items-center justify-end gap-3">
         <SubmitButton>{alert ? 'Guardar alerta' : 'Crear alerta'}</SubmitButton>
       </div>
     </ActionForm>

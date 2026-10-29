@@ -18,13 +18,31 @@
     visibility: visible !important;
   }
 
+  /*
+   * Paper is always light: the sheet pins the light theme's tokens, so a
+   * report printed from dark mode keeps legible text, hairlines and tiles,
+   * and the bars and the light's dot print in color.
+   */
   .sheet {
+    --background: #fff;
+    --foreground: #111;
+    --card: #fff;
+    --card-foreground: #111;
+    --muted: #f4f4f5;
+    --muted-foreground: #52525b;
+    --secondary: #f4f4f5;
+    --secondary-foreground: #18181b;
+    --border: #e4e4e7;
+    --brand-soft: color-mix(in oklab, var(--primary) 10%, white);
     position: absolute !important;
     inset: 0 auto auto 0 !important;
     width: 100% !important;
     min-height: auto !important;
     padding: 0 !important;
+    gap: 14px !important;
     color: #111 !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
 
   .toolbar {
@@ -34,6 +52,17 @@
   .section {
     break-inside: avoid;
     box-shadow: none !important;
+  }
+
+  /* No entrance motion on paper: tiles print at full opacity. */
+  .sheet [data-slot='kpi-tile'] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .bar {
+    border: 1px solid var(--border);
   }
 
   .muted {

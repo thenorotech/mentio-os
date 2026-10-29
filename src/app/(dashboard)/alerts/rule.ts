@@ -7,6 +7,7 @@ import type { Alert } from '@mentio-dev/sdk';
 import type { FilterDef, FilterOption } from '@/components/url-filters';
 import { bool, isOneOf, list, str } from '@/lib/form';
 import { INTENTS, REVIEW_PLATFORMS, SEARCH_PLATFORMS, SENTIMENTS, platformName, tagName } from '@/lib/format';
+import { SENTIMENT_COLORS } from '@/lib/chart-colors';
 
 export type AlertFilter = Alert['filter'];
 export type AlertSchedule = NonNullable<Alert['schedule']>;
@@ -125,7 +126,6 @@ export function readSchedule(form: FormData, mode: AlertMode): AlertSchedule | n
 
 /** The rule's conditions as filter chips, named like the fields readFilter takes. */
 export function alertFilterDefs(keywords: FilterOption[], groups: FilterOption[]): FilterDef[] {
-  const SENTIMENT_COLORS: Record<string, string> = { positive: '#10b981', neutral: '#a1a1aa', negative: '#ef4444' };
   return [
     ...(keywords.length ? [{ param: 'keywordIds', label: 'Candidato o tema', icon: 'tag', kind: 'multi', options: keywords } as const] : []),
     ...(groups.length ? [{ param: 'groupIds', label: 'Campaña', icon: 'folder', kind: 'multi', options: groups } as const] : []),

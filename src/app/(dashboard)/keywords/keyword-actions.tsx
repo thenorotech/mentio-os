@@ -5,7 +5,7 @@ import { deleteKeywordAction, setMutedAction } from './actions';
 
 export function KeywordActions({ keyword, backToList = false, size = 'sm' }: { keyword: Pick<Keyword, 'id' | 'term' | 'muted'>; backToList?: boolean; size?: 'sm' | 'md' }) {
   return (
-    <div className="flex flex-wrap items-start justify-end gap-1.5">
+    <div role="group" aria-label={`Acciones de ${keyword.term}`} className="flex flex-wrap items-start justify-end gap-1.5">
       <ActionForm action={setMutedAction}>
         <input type="hidden" name="id" value={keyword.id} />
         <input type="hidden" name="muted" value={keyword.muted ? 'false' : 'true'} />

@@ -10,6 +10,7 @@
  *   DEMO_API_LOG=1 prints every write it receives
  */
 import http from 'node:http';
+import { handleApify } from './demo-apify.mjs';
 
 const PORT = Number(process.argv[2] ?? process.env.DEMO_API_PORT ?? process.env.DEMO_PORT ?? process.env.PORT ?? 4010);
 const SPEC_URL = process.env.MENTIO_OPENAPI_URL ?? 'https://api.mentio.dev/v1/openapi.json';
@@ -894,6 +895,7 @@ const LOG = Boolean(process.env.DEMO_API_LOG);
 http
   .createServer(async (req, res) => {
     const url = new URL(req.url ?? '/', 'http://demo');
+    if (await handleApify(req, res, url)) return;
     if (LOG && req.method !== 'GET') {
       let body = '';
       for await (const chunk of req) body += chunk;

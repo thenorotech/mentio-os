@@ -5,8 +5,8 @@
  */
 import type { FilterDef, FilterOption } from '@/components/url-filters';
 import { INTENTS, PLATFORM_NAMES, SENTIMENTS, tagName } from '@/lib/format';
+import { SENTIMENT_COLORS } from '@/lib/chart-colors';
 
-const SENTIMENT_COLORS: Record<string, string> = { positive: '#10b981', neutral: '#a1a1aa', negative: '#ef4444' };
 
 export function mentionFilterDefs(
   keywords: FilterOption[],

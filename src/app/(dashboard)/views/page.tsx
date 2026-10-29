@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Eye, Plus } from 'lucide-react';
-import { Conditions, EmptyState, Field, Input, LinkButton, PageHeader, Table, td, TableCell, TableRow, rowLink } from '@/components/ui';
+import { Conditions, EmptyState, Field, Input, LinkButton, Table, td, TableCell, TableRow, rowLink, DataView } from '@/components/ui';
 import { InfoTip } from '@/components/info-tip';
 import { ActionForm, DrawerButton, SubmitButton } from '@/components/ui/client';
 import { describeFilter, fromViewFilter, parseFilters } from '@/app/(dashboard)/mentions/filters';
@@ -38,8 +38,7 @@ export default async function ViewsPage() {
   const [views, options] = await Promise.all([mentio().listViews().then(unwrap), loadFilterOptions()]);
 
   return (
-    <div>
-      <PageHeader title={<span className="inline-flex items-center gap-1">Vistas <InfoTip term="vista guardada" /></span>} description="Filtros guardados para consultar menciones de candidatos y temas de campaña." actions={<NewView options={options} />} />
+    <DataView title="Vistas" notice="Filtros guardados para consultar menciones de candidatos y temas de campaña." actions={<NewView options={options} />}>
 
       {views.data.length === 0 ? (
         <EmptyState icon={Eye} title="Aún no hay vistas guardadas" example="Guarda “críticas a la propuesta de seguridad” para consultar esas menciones con facilidad." action={<NewView options={options} primary={false} />}>
@@ -73,6 +72,6 @@ export default async function ViewsPage() {
           })}
         </Table>
       )}
-    </div>
+    </DataView>
   );
 }

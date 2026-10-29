@@ -1,14 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, Plus, X } from 'lucide-react';
-import { Badge, Card, Field, Input, TokenInput } from '@/components/ui';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { ArrowLeft, ArrowRight, Check, Info, Plus, X } from 'lucide-react';
+import { Field, Input, TokenInput, cx } from '@/components/ui';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { SubmitButton } from '@/components/ui/client';
 
 const STEPS = [
-  { label: 'Tu candidatura', hint: 'El nombre y los apodos con los que te reconocen.' },
+  { label: 'Tu candidatura', hint: 'El nombre y los apodos con los que la gente te reconoce.' },
   { label: 'Adversarios', hint: 'A quién quieres comparar en el tablero.' },
   { label: 'Temas', hint: 'De qué asuntos quieres seguir la conversación.' },
 ] as const;
@@ -25,6 +26,19 @@ export function SetupWizard() {
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [stepError, setStepError] = useState('');
   const percent = Math.round(((step + 1) / STEPS.length) * 100);
+  const isLast = step === STEPS.length - 1;
+
+  // On a step change, focus moves to the step's title so a screen reader
+  // announces where the person is (never on the first render).
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const firstRender = useRef(true);
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    titleRef.current?.focus();
+  }, [step]);
 
   function next() {
     setStepError('');
@@ -37,6 +51,19 @@ export function SetupWizard() {
       return;
     }
     setStep((current) => Math.min(current + 1, STEPS.length - 1));
+  }
+
+  function back() {
+    setStepError('');
+    setStep((current) => Math.max(current - 1, 0));
+  }
+
+  /** Enter in a field before the last step continues instead of sending the half-filled form. */
+  function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (isLast || event.key !== 'Enter' || event.defaultPrevented) return;
+    if (!(event.target instanceof HTMLInputElement)) return;
+    event.preventDefault();
+    next();
   }
 
   function addCompetitor() {
@@ -53,34 +80,58 @@ export function SetupWizard() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-5">
-      <Card className="overflow-hidden">
-        <div className="space-y-4 px-5 pt-5 sm:px-7 sm:pt-7">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Paso {step + 1} de {STEPS.length}</p>
-              <h2 className="mt-1 text-lg font-semibold">{STEPS[step].label}</h2>
-              <p className="mt-1 text-sm text-muted-foreground">{STEPS[step].hint}</p>
-            </div>
-            <Badge tone="accent">{percent}%</Badge>
-          </div>
-          <div role="progressbar" aria-label="Progreso del asistente" aria-valuemin={1} aria-valuemax={STEPS.length} aria-valuenow={step + 1} className="h-2 overflow-hidden rounded-full bg-muted">
-            <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${percent}%` }} />
-          </div>
-          <ol className="grid grid-cols-3 gap-2 pb-1" aria-label="Pasos">
-            {STEPS.map((item, index) => (
-              <li key={item.label} className={`flex items-center gap-2 text-xs ${index === step ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
-                <span className={`grid size-6 shrink-0 place-items-center rounded-full border ${index < step ? 'border-primary bg-primary text-primary-foreground' : index === step ? 'border-primary text-primary' : 'border-border'}`}>
-                  {index < step ? <Check className="size-3.5" aria-hidden="true" /> : index + 1}
+    <div className="grid gap-4" onKeyDown={onKeyDown}>
+      <nav aria-label="Pasos del asistente">
+        <ol className="grid grid-cols-3 gap-2">
+          {STEPS.map((item, index) => {
+            const done = index < step;
+            const current = index === step;
+            return (
+              <li key={item.label} aria-current={current ? 'step' : undefined} className="grid gap-2">
+                <span aria-hidden className={cx('h-1 rounded-full transition-colors duration-300', done || current ? 'bg-primary' : 'bg-muted')} />
+                <span className={cx('flex min-w-0 items-center gap-2 text-xs', current ? 'font-medium text-foreground' : 'text-muted-foreground')}>
+                  <span
+                    aria-hidden
+                    className={cx(
+                      'grid size-5 shrink-0 place-items-center rounded-full border text-[11px] tabular-nums transition-colors',
+                      done ? 'border-primary bg-primary text-primary-foreground' : current ? 'border-primary text-primary' : 'border-border',
+                    )}
+                  >
+                    {done ? <Check className="size-3" /> : index + 1}
+                  </span>
+                  <span className="truncate @max-md:sr-only">{item.label}</span>
+                  <span className="sr-only">{done ? ' (completado)' : current ? ' (paso actual)' : ''}</span>
                 </span>
-                <span className="hidden sm:inline">{item.label}</span>
               </li>
-            ))}
-          </ol>
-        </div>
+            );
+          })}
+        </ol>
+      </nav>
 
-        <div className="space-y-6 p-5 sm:p-7">
-          <section hidden={step !== 0} aria-labelledby="candidate-step-title" className="space-y-5">
+      <Card className="gap-0 py-0">
+        <CardHeader className="gap-1 border-b py-4">
+          <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase tabular-nums">
+            Paso {step + 1} de {STEPS.length}
+          </p>
+          <h2 ref={titleRef} tabIndex={-1} className="rounded-sm text-base font-semibold focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none">
+            {STEPS[step].label}
+          </h2>
+          <p className="text-sm text-pretty text-muted-foreground">{STEPS[step].hint}</p>
+          <div
+            role="progressbar"
+            aria-label="Progreso del asistente"
+            aria-valuemin={1}
+            aria-valuemax={STEPS.length}
+            aria-valuenow={step + 1}
+            aria-valuetext={`Paso ${step + 1} de ${STEPS.length}: ${STEPS[step].label}`}
+            className="sr-only"
+          >
+            {percent}%
+          </div>
+        </CardHeader>
+
+        <CardContent className="py-5">
+          <section hidden={step !== 0} aria-labelledby="candidate-step-title" className="grid gap-5">
             <h3 id="candidate-step-title" className="sr-only">Datos de tu candidatura</h3>
             <Field label="Nombre del candidato">
               <Input name="candidateName" value={candidateName} onChange={(event) => setCandidateName(event.target.value)} placeholder="Ej. Andrea López" autoComplete="name" />
@@ -93,36 +144,40 @@ export function SetupWizard() {
             </Field>
           </section>
 
-          <section hidden={step !== 1} aria-labelledby="competitors-step-title" className="space-y-4">
+          <section hidden={step !== 1} aria-labelledby="competitors-step-title" className="grid gap-3">
             <h3 id="competitors-step-title" className="sr-only">Adversarios</h3>
-            {competitors.map((competitor, index) => (
-              <div key={competitor.id} className="rounded-xl border bg-card p-4 sm:p-5">
-                <input type="hidden" name="competitorIds" value={competitor.id} />
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <p className="text-sm font-medium">Adversario {index + 1}</p>
-                  {competitors.length > 1 ? (
-                    <Button type="button" variant="ghost" size="icon-sm" aria-label={`Quitar adversario ${index + 1}`} onClick={() => removeCompetitor(competitor.id)}>
-                      <X aria-hidden="true" />
-                    </Button>
-                  ) : null}
-                </div>
-                <div className="grid gap-4">
-                  <Field label="Nombre">
-                    <Input name={`competitorName_${competitor.id}`} value={competitor.name} onChange={(event) => updateCompetitor(competitor.id, event.target.value)} placeholder="Ej. Carlos Ramírez" />
-                  </Field>
-                  <Field label="Apodos y variantes">
-                    <TokenInput name={`competitorVariants_${competitor.id}`} placeholder="Ej. Carlos, Charly Ramírez" max={10} />
-                  </Field>
-                </div>
-              </div>
-            ))}
-            <Button type="button" variant="outline" onClick={addCompetitor} disabled={competitors.length >= 10}>
-              <Plus aria-hidden="true" /> Agregar adversario
-            </Button>
-            {competitors.length >= 10 ? <p className="text-xs text-muted-foreground">Puedes agregar hasta 10 adversarios en este paso.</p> : null}
+            <ul className="grid gap-3">
+              {competitors.map((competitor, index) => (
+                <li key={competitor.id} className="grid gap-4 rounded-lg border bg-muted/20 p-4">
+                  <input type="hidden" name="competitorIds" value={competitor.id} />
+                  <div className="flex min-h-7 items-center justify-between gap-3">
+                    <p className="text-sm font-medium">Adversario {index + 1}</p>
+                    {competitors.length > 1 ? (
+                      <Button type="button" variant="ghost" size="icon-sm" aria-label={`Quitar adversario ${index + 1}${competitor.name.trim() ? `: ${competitor.name.trim()}` : ''}`} onClick={() => removeCompetitor(competitor.id)}>
+                        <X aria-hidden="true" />
+                      </Button>
+                    ) : null}
+                  </div>
+                  <div className="grid gap-4 @xl:grid-cols-2">
+                    <Field label="Nombre">
+                      <Input name={`competitorName_${competitor.id}`} value={competitor.name} onChange={(event) => updateCompetitor(competitor.id, event.target.value)} placeholder="Ej. Carlos Ramírez" />
+                    </Field>
+                    <Field label="Apodos y variantes">
+                      <TokenInput name={`competitorVariants_${competitor.id}`} placeholder="Ej. Carlos, Charly Ramírez" max={10} />
+                    </Field>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <Button type="button" variant="outline" size="sm" onClick={addCompetitor} disabled={competitors.length >= 10}>
+                <Plus aria-hidden="true" /> Agregar adversario
+              </Button>
+              <p className="text-xs text-muted-foreground tabular-nums">{competitors.length} de 10 adversarios</p>
+            </div>
           </section>
 
-          <section hidden={step !== 2} aria-labelledby="topics-step-title" className="space-y-5">
+          <section hidden={step !== 2} aria-labelledby="topics-step-title" className="grid gap-5">
             <h3 id="topics-step-title" className="sr-only">Temas de conversación</h3>
             <Field label="Temas sugeridos" hint="Elige los que quieras seguir; también puedes añadir otros abajo." group>
               <ToggleGroup
@@ -134,7 +189,7 @@ export function SetupWizard() {
                 className="flex-wrap"
               >
                 {SUGGESTED_TOPICS.map((topic) => (
-                  <ToggleGroupItem key={topic} value={topic} variant="outline" className="h-8 rounded-full px-3 text-xs font-normal data-pressed:border-primary/40 data-pressed:bg-primary/10 data-pressed:text-primary">
+                  <ToggleGroupItem key={topic} value={topic} variant="outline" className="h-8 px-3 text-xs font-normal data-pressed:border-primary/40 data-pressed:bg-brand-soft data-pressed:text-primary">
                     {topic}
                   </ToggleGroupItem>
                 ))}
@@ -144,27 +199,29 @@ export function SetupWizard() {
             <Field label="Otros temas" hint="Opcional. Puedes escribir varios y presionar Enter después de cada uno.">
               <TokenInput name="freeTopics" placeholder="Ej. Obras públicas" max={20} />
             </Field>
-            <p className="rounded-lg bg-muted/60 px-3 py-2.5 text-xs text-muted-foreground">
+            <p className="flex items-start gap-2 rounded-lg bg-muted/60 px-3 py-2.5 text-xs text-pretty text-muted-foreground">
+              <Info aria-hidden className="mt-px size-3.5 shrink-0" />
               Al terminar crearemos una campaña con el candidato, sus adversarios y los temas que elegiste. Cada nombre o variante será un término de seguimiento.
             </p>
           </section>
 
-          {stepError ? <p role="alert" className="text-sm text-destructive">{stepError}</p> : null}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
-            {step > 0 ? (
-              <Button type="button" variant="ghost" onClick={() => { setStepError(''); setStep((current) => Math.max(current - 1, 0)); }}>
-                <ArrowLeft aria-hidden="true" /> Volver
-              </Button>
-            ) : <span />}
-            {step < STEPS.length - 1 ? (
-              <Button type="button" onClick={next}>
-                Continuar <ArrowRight aria-hidden="true" />
-              </Button>
-            ) : (
-              <SubmitButton>Crear mi tablero</SubmitButton>
-            )}
-          </div>
-        </div>
+          {stepError ? <p role="alert" className="mt-4 text-sm text-destructive">{stepError}</p> : null}
+        </CardContent>
+
+        <CardFooter className="justify-between gap-3 bg-muted/30 py-3">
+          {step > 0 ? (
+            <Button type="button" variant="ghost" onClick={back}>
+              <ArrowLeft aria-hidden="true" /> Volver
+            </Button>
+          ) : <span />}
+          {isLast ? (
+            <SubmitButton>Crear mi tablero</SubmitButton>
+          ) : (
+            <Button type="button" onClick={next}>
+              Continuar <ArrowRight aria-hidden="true" />
+            </Button>
+          )}
+        </CardFooter>
       </Card>
     </div>
   );

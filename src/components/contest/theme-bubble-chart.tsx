@@ -1,5 +1,7 @@
 'use client';
 
+import { SENTIMENT_COLORS } from '@/lib/chart-colors';
+
 export type ThemeBubble = {
   id: string;
   name: string;
@@ -21,12 +23,13 @@ function mixColor(from: string, to: string, amount: number) {
   return `#${channels.map((value) => value.toString(16).padStart(2, '0')).join('')}`;
 }
 
+/** The bubble's fill: the sentiment palette, blended from negative through neutral to positive. */
 function toneColor(score: number | null) {
-  if (score === null) return '#a1a1aa';
+  if (score === null) return SENTIMENT_COLORS.neutral;
   const bounded = Math.max(-1, Math.min(1, score));
   return bounded <= 0
-    ? mixColor('#dc2626', '#a1a1aa', bounded + 1)
-    : mixColor('#a1a1aa', '#16a34a', bounded);
+    ? mixColor(SENTIMENT_COLORS.negative, SENTIMENT_COLORS.neutral, bounded + 1)
+    : mixColor(SENTIMENT_COLORS.neutral, SENTIMENT_COLORS.positive, bounded);
 }
 
 function toneText(score: number | null) {
@@ -78,7 +81,11 @@ export function ThemeBubbleChart({ topics }: { topics: ThemeBubble[] }) {
   const formatTick = (value: number) => Math.round(value).toLocaleString('es-MX');
 
   if (topics.length === 0) {
-    return <p className="text-sm text-muted-foreground">No hay temas en este periodo.</p>;
+    return (
+      <div className="flex min-h-[220px] items-center justify-center rounded-lg border border-dashed px-4 text-center text-sm text-muted-foreground">
+        No hay temas en este periodo.
+      </div>
+    );
   }
 
   return (
@@ -112,8 +119,8 @@ export function ThemeBubbleChart({ topics }: { topics: ThemeBubble[] }) {
         );
       })}
 
-      <line x1={LEFT} y1={plotBottom} x2={plotRight} y2={plotBottom} stroke="var(--muted-foreground)" />
-      <line x1={LEFT} y1={TOP} x2={LEFT} y2={plotBottom} stroke="var(--muted-foreground)" />
+      <line x1={LEFT} y1={plotBottom} x2={plotRight} y2={plotBottom} stroke="var(--muted-foreground)" strokeOpacity={0.6} />
+      <line x1={LEFT} y1={TOP} x2={LEFT} y2={plotBottom} stroke="var(--muted-foreground)" strokeOpacity={0.6} />
       <text x={(LEFT + plotRight) / 2} y={height - 18} textAnchor="middle" fill="var(--muted-foreground)" fontSize={13}>
         Cuánto se habla
       </text>
@@ -146,16 +153,27 @@ export function ThemeBubbleChart({ topics }: { topics: ThemeBubble[] }) {
             key={topic.id}
             href={topic.href}
             aria-label={`Ver menciones de ${topic.name}, ${matched.toLocaleString('es-MX')} menciones. ${toneText(topic.sentimentScore)}`}
-            className="cursor-pointer outline-none focus-visible:opacity-70"
+            className="group cursor-pointer outline-none"
           >
             <title>{tooltip}</title>
-            <circle cx={cx} cy={cy} r={radius} fill={toneColor(topic.sentimentScore)} fillOpacity={0.88} stroke="var(--background)" strokeWidth={2} />
+            {/* The focus ring: a halo in --ring around the bubble, only while it has keyboard focus. */}
+            <circle cx={cx} cy={cy} r={radius + 4} fill="none" stroke="var(--ring)" strokeWidth={3} className="opacity-0 group-focus-visible:opacity-100" />
+            <circle
+              cx={cx}
+              cy={cy}
+              r={radius}
+              fill={toneColor(topic.sentimentScore)}
+              fillOpacity={0.88}
+              stroke="var(--background)"
+              strokeWidth={2}
+              className="motion-safe:transition-[fill-opacity] group-hover:[fill-opacity:1]"
+            />
             <text
               x={labelX}
               y={cy + 4}
               textAnchor={labelAnchor}
-              fill={labelInside ? '#fff' : 'var(--foreground)'}
-              stroke={labelInside ? 'rgba(15,23,42,0.65)' : 'var(--background)'}
+              fill={labelInside ? 'white' : 'var(--foreground)'}
+              stroke={labelInside ? 'rgb(0 0 0 / 0.55)' : 'var(--background)'}
               strokeWidth={2.5}
               paintOrder="stroke"
               fontSize={labelInside ? 9 : 11}

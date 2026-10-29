@@ -1,9 +1,41 @@
+import { Skeleton } from '@/components/ui/skeleton';
+
+/** The template gallery while it loads: the header with its back link and action, three template cards. */
 export default function LoadingAlertTemplates() {
   return (
-    <div className="space-y-6 animate-pulse">
-      <div className="space-y-2"><div className="h-6 w-52 rounded bg-muted" /><div className="h-4 w-80 max-w-full rounded bg-muted" /></div>
-      <div className="grid gap-4 @4xl:grid-cols-3">
-        {[1, 2, 3].map((item) => <div key={item} className="space-y-5 rounded-xl bg-card p-5 ring-1 ring-foreground/10"><div className="h-10 w-10 rounded-xl bg-muted" /><div className="h-5 w-48 rounded bg-muted" /><div className="h-12 rounded bg-muted" /><div className="h-10 rounded bg-muted" /></div>)}
+    <div aria-busy="true" aria-label="Cargando">
+      <div className="mb-6 flex flex-col gap-3 @lg:flex-row @lg:items-start @lg:justify-between">
+        <div className="grid gap-2">
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-7 w-52" />
+          <Skeleton className="h-4 w-96 max-w-full" />
+        </div>
+        <Skeleton className="h-9 w-32" />
+      </div>
+      <div className="grid gap-4 @2xl:grid-cols-2 @5xl:grid-cols-3">
+        {Array.from({ length: 3 }, (_, i) => (
+          <div key={i} className="flex flex-col overflow-hidden rounded-xl border bg-card shadow-xs">
+            <div className="grid gap-3 px-4 pt-4">
+              <div className="flex items-start justify-between gap-3">
+                <Skeleton className="size-9 rounded-lg" />
+                <Skeleton className="h-5 w-20 rounded-full" />
+              </div>
+              <div className="grid gap-1.5">
+                <Skeleton className="h-4 w-44" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-2/3" />
+              </div>
+            </div>
+            <div className="flex-1 px-4 pt-3 pb-4">
+              <Skeleton className="h-14 rounded-lg" />
+            </div>
+            <div className="grid gap-3 border-t bg-muted/30 px-4 py-3">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-9" />
+              <Skeleton className="h-8 w-36 justify-self-end" />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
