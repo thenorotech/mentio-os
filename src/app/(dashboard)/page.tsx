@@ -9,7 +9,7 @@ import { NoBrandCard } from '@/components/home/no-brand-card';
 import { QuickLinks } from '@/components/home/quick-links';
 import { RecentMentions } from '@/components/home/recent-mentions';
 import { SocialPulseCard, SocialPulseSkeleton, loadSocialPulse } from '@/components/home/social-pulse-card';
-import { Card, EmptyState, LinkButton, PageHeader } from '@/components/ui';
+import { CHART_COLORS, Card, EmptyState, KpiStrip, LinkButton, PageHeader, SectionHeading, TONE_TEXT } from '@/components/ui';
 import { LinkToggle } from '@/components/ui/client';
 import { apifyConfigured } from '@/lib/apify';
 import { compact, day, platformName } from '@/lib/format';
@@ -24,8 +24,9 @@ const RANGES = ['7d', '30d', '90d'] as const;
 type HomeRange = (typeof RANGES)[number];
 type Point = AnalyticsSeries['data'][number]['points'][number];
 
-const SERIES_COLORS = ['#1421b9', '#d65a43', '#0c8092', '#8555b5', '#ba7615', '#386c4b', '#596579'];
-const PLATFORM_COLORS = ['#1421b9', '#078a9b', '#d65a43', '#8a59bd', '#d99224', '#249063', '#596579', '#b34f80'];
+/** Series and platforms share the chart palette (brand first), as every chart in the app. */
+const SERIES_COLORS = CHART_COLORS;
+const PLATFORM_COLORS = CHART_COLORS;
 const compactNumber = new Intl.NumberFormat('es-MX', { notation: 'compact', maximumFractionDigits: 1 });
 
 function periodChange(current: number, previous: number | null | undefined, direction: 'up' | 'down' | 'neutral'): KpiChange | null {
@@ -56,9 +57,8 @@ function topicTone(topic: { positive: number; neutral: number; negative: number 
 
 function greetingActions(range: HomeRange, params: SearchParams) {
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-border/70 bg-card px-3 py-2 shadow-sm">
+    <div role="group" aria-label="Periodo" className="flex items-center gap-2">
       <CalendarDays aria-hidden className="size-4 shrink-0 text-muted-foreground" />
-      <span className="hidden text-xs font-medium text-muted-foreground sm:inline">Periodo</span>
       <LinkToggle
         current={range}
         items={RANGES.map((value) => ({
@@ -84,7 +84,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
     return (
       <div className="@container/home space-y-6">
         <PageHeader
-          title={<span className="font-heading text-2xl tracking-tight">Buen día, equipo</span>}
+          title="Buen día, equipo"
           description="Configura tu campaña para empezar a escuchar lo que se dice de tus candidatos."
           actions={greetingActions(range, params)}
         />
@@ -185,22 +185,22 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
     since: `${summary.window.from.slice(0, 10)}T00:00:00.000Z`,
     until: `${summary.window.to.slice(0, 10)}T23:59:59.999Z`,
   })}`;
-  const toneColor = toneScore === null ? 'text-muted-foreground' : toneScore <= -15 ? 'text-rose-600' : toneScore >= 15 ? 'text-emerald-700' : 'text-amber-600';
+  const toneColor = toneScore === null ? 'text-muted-foreground' : toneScore <= -15 ? TONE_TEXT.negative : toneScore >= 15 ? TONE_TEXT.positive : TONE_TEXT.warning;
   const recentPositive: Mention[] = positiveMentions.data.slice(0, 5);
   const recentNegative: Mention[] = negativeMentions.data.slice(0, 5);
   const periodLabel = `${day(summary.window.from)} al ${day(summary.window.to)} · ${summary.window.days} días`;
 
   return (
-    <div className="@container/home space-y-6 pb-4">
+    <div className="@container/home space-y-6">
       <PageHeader
-        title={<span className="font-heading text-2xl tracking-tight">Buen día, equipo</span>}
+        title="Buen día, equipo"
         description={<span><strong className="font-semibold text-foreground">{campaignName}</strong><span className="mx-1.5 text-muted-foreground">·</span>{periodLabel}</span>}
         actions={greetingActions(range, params)}
       />
 
       {light.isCrisis ? <CrisisBanner candidateName={candidate.name} negativeMentions={summary.sentiment.negative} growth={Number.isFinite(crisisGrowth) ? crisisGrowth : null} href={crisisHref} /> : null}
 
-      <section aria-label="Indicadores de campaña" className="grid gap-3 @md/home:grid-cols-2 @3xl/home:grid-cols-3 @5xl/home:grid-cols-5">
+      <KpiStrip label="Indicadores de campaña">
         <HomeKpi label="Menciones del candidato" value={compactNumber.format(summary.matched)} change={periodChange(summary.matched, previous?.matched, 'neutral')} spark={candidatePoints.map((point) => point.matched)} hint="Menciones por día" />
         <HomeKpi
           label={reachMetric ? 'Alcance estimado' : 'Autores únicos'}
@@ -215,21 +215,15 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
         })} valueClassName={toneColor} sparkTone={toneScore !== null && toneScore < 0 ? 'bad' : 'accent'} hint="Índice de −100 a +100" />
         <HomeKpi label="Participación de voz" value={voiceShare === null ? '—' : `${voiceShare.toFixed(1)}%`} change={voiceShare === null ? null : pointChange(voiceShare, previousVoiceShare)} spark={voiceDaily} hint={competitors.length ? 'Frente a adversarios registrados' : 'Agrega adversarios para comparar'} />
         <HomeKpi label="Menciones negativas" value={compactNumber.format(summary.sentiment.negative)} change={periodChange(summary.sentiment.negative, previous?.sentiment.negative, 'down')} spark={candidatePoints.map((point) => point.negative)} sparkTone="bad" hint="Críticas detectadas por día" />
-      </section>
+      </KpiStrip>
 
       <section aria-label="Resumen del candidato">
         <BrandInsightCard candidate={candidate} summary={summary} previous={previous} topic={mainTopic} />
       </section>
 
       <section aria-label="Conversación diaria" className="space-y-3">
-        <div className="flex flex-wrap items-end justify-between gap-2">
-          <div>
-            <h2 className="flex items-center gap-2 text-base font-semibold"><Activity aria-hidden className="size-4 text-primary" />Conversación en el tiempo</h2>
-            <p className="mt-1 text-xs text-muted-foreground">Menciones por día: {candidate.name} frente a sus adversarios.</p>
-          </div>
-          <span className="text-[11px] text-muted-foreground">{periodLabel}</span>
-        </div>
-        <Card>
+        <SectionHeading icon={Activity} title="Conversación en el tiempo" description={`Menciones por día: ${candidate.name} frente a sus adversarios.`} aside={periodLabel} />
+        <Card index={0}>
           {lineSeries.some((series) => series.points.some((point) => point.matched > 0)) ? (
             <ConversationChart series={lineSeries} />
           ) : (
@@ -241,7 +235,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
       </section>
 
       <section aria-label="Canales, tono y temas" className="grid gap-4 @3xl/home:grid-cols-3">
-        <Card title={<span className="flex items-center gap-2"><Radio aria-hidden className="size-4 text-primary" />Plataformas</span>} description="Dónde se concentra la conversación sobre tu candidato.">
+        <Card index={1} title="Plataformas" hint="Menciones del candidato agrupadas por la red o el sitio donde se publicaron." description="Dónde se concentra la conversación sobre tu candidato.">
           {platformData.length ? (
             <div className="grid items-center gap-2 @lg:grid-cols-[1fr_0.8fr]">
               <PlatformDonut data={platformData} />
@@ -252,13 +246,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
           ) : <EmptyState compact icon={Radio} title="Aún no hay plataformas con menciones" action={<LinkButton href="/keywords/new" variant="secondary" size="sm">Revisar términos</LinkButton>}>Al llegar publicaciones, aquí verás qué canales concentran la conversación.</EmptyState>}
         </Card>
 
-        <Card title={<span className="flex items-center gap-2"><MessageSquareText aria-hidden className="size-4 text-primary" />Tono por día</span>} description="Menciones positivas, neutrales y negativas.">
+        <Card index={2} title="Tono por día" hint="Cada mención clasificada como positiva, neutral o negativa, contada por día." description="Menciones positivas, neutrales y negativas.">
           {toneDaily.some((point) => point.positive + point.neutral + point.negative > 0)
             ? <DailyToneChart data={toneDaily.map((point, index) => ({ ...point, date: candidatePoints[index]?.date ?? '' }))} />
             : <EmptyState compact icon={MessageSquareText} title="Aún no hay tono para comparar" action={<LinkButton href="/keywords/new" variant="secondary" size="sm">Revisar términos</LinkButton>}>Cuando haya publicaciones clasificadas, verás si el tono mejora o empeora cada día.</EmptyState>}
         </Card>
 
-        <Card title={<span className="flex items-center gap-2"><Hash aria-hidden className="size-4 text-primary" />Temas que mueven la conversación</span>} description="Los cinco temas con más menciones, coloreados por su tono predominante.">
+        <Card index={3} title="Temas que mueven la conversación" hint="Los temas registrados en Candidatos y temas con más menciones en el periodo; el color es su tono predominante." description="Los cinco temas con más menciones, coloreados por su tono predominante.">
           {topTopics.length ? (
             <ol className="space-y-4">
               {topTopics.map((item) => {

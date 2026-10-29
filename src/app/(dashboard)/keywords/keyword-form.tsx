@@ -29,7 +29,7 @@ export function KeywordForm({ keyword, groups }: { keyword?: Keyword; groups: Gr
     <ActionForm action={editing ? updateKeywordAction : createKeywordAction} className="space-y-6">
       {keyword ? <input type="hidden" name="id" value={keyword.id} /> : null}
 
-      <Card title={<span className="inline-flex items-center gap-1">Candidato o tema <InfoTip text="Elige si vas a monitorear a la persona de tu campaña, a un adversario o un tema de agenda." /></span>}>
+      <Card index={1} title="Candidato o tema" hint="Elige si vas a monitorear a la persona de tu campaña, a un adversario o un tema de agenda." description="Qué se monitorea y en qué campaña.">
         <div className="grid gap-4 @lg:grid-cols-2">
           {keyword ? (
             <Field label="Término" hint="No puedes cambiar un término después de crearlo.">
@@ -65,12 +65,14 @@ export function KeywordForm({ keyword, groups }: { keyword?: Keyword; groups: Gr
         </Field>
       </Card>
 
-      <Card title="Plataformas">
-        <PlatformPicker name="platforms" options={SEARCH_PLATFORMS} defaultValue={keyword?.platforms ?? null} labels={Object.fromEntries(SEARCH_PLATFORMS.map((p) => [p, platformName(p)]))} />
-        <SwitchRow name="reviewsOnly" defaultChecked={keyword?.platforms?.length === 0} label="Solo reseñas" hint="No busques el término en plataformas; recopila únicamente las páginas de reseñas indicadas abajo." />
+      <Card index={2} title="Plataformas" description="Dónde se busca el término.">
+        <div className="grid gap-4">
+          <PlatformPicker name="platforms" options={SEARCH_PLATFORMS} defaultValue={keyword?.platforms ?? null} labels={Object.fromEntries(SEARCH_PLATFORMS.map((p) => [p, platformName(p)]))} />
+          <SwitchRow name="reviewsOnly" defaultChecked={keyword?.platforms?.length === 0} label="Solo reseñas" hint="No busques el término en plataformas; recopila únicamente las páginas de reseñas indicadas abajo." />
+        </div>
       </Card>
 
-      <Card title="Reglas de coincidencia" description="Se revisan antes de guardar una mención. Las publicaciones descartadas no se guardan.">
+      <Card index={3} title="Reglas de coincidencia" description="Se revisan antes de guardar una mención. Las publicaciones descartadas no se guardan.">
         <div className="grid gap-4 @lg:grid-cols-2">
           <Field label="Términos requeridos" hint="La publicación también debe incluir estos términos.">
             <TokenInput name="requiredTerms" defaultValue={matching?.requiredTerms} placeholder="candidatura, propuesta… presiona Enter" />
@@ -92,15 +94,18 @@ export function KeywordForm({ keyword, groups }: { keyword?: Keyword; groups: Gr
             <TokenInput name="excludedAuthors" defaultValue={matching?.excludedAuthors} splitOnComma={false} placeholder="@cuenta_falsa… presiona Enter" />
           </Field>
         </div>
-        <SwitchRow name="caseSensitive" defaultChecked={matching?.caseSensitive ?? false} label="Distinguir mayúsculas y minúsculas" hint="El término debe aparecer tal como lo escribiste: RAG, no rag." />
+        <div className="mt-4">
+          <SwitchRow name="caseSensitive" defaultChecked={matching?.caseSensitive ?? false} label="Distinguir mayúsculas y minúsculas" hint="El término debe aparecer tal como lo escribiste: RAG, no rag." />
+        </div>
       </Card>
 
       <Card
+        index={4}
         title="Páginas de reseñas"
         description="Cada reseña de una página conectada se registra como mención. Al agregar una página se recuperan gratis los últimos 30 días."
       >
         {keyword && keyword.reviewSources.length > 0 ? (
-          <ul className="mb-4 divide-y divide-line rounded-md border border-line">
+          <ul aria-label="Páginas conectadas" className="mb-5 divide-y rounded-lg border">
             {keyword.reviewSources.map((src) => {
               const key = sourceKey(src);
               return (
@@ -108,7 +113,7 @@ export function KeywordForm({ keyword, groups }: { keyword?: Keyword; groups: Gr
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="min-w-0">
                       <span className="font-medium">{platformName(src.platform)}</span>{' '}
-                      <a href={src.url} target="_blank" rel="noreferrer" className="break-all text-primary hover:underline">{src.id}</a>
+                      <a href={src.url} target="_blank" rel="noreferrer" className="rounded-sm break-all text-primary hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none">{src.id}</a>
                       <span className="ml-2 text-xs text-muted-foreground">desde {date(src.connectedAt)}</span>
                     </div>
                     <div className="text-destructive">
@@ -134,7 +139,9 @@ export function KeywordForm({ keyword, groups }: { keyword?: Keyword; groups: Gr
             })}
           </ul>
         ) : null}
-        <p className="mb-3 text-xs font-medium text-foreground/80">{keyword?.reviewSources.length ? 'Conectar otra página' : 'Conectar una página'} (opcional)</p>
+        <p className="mb-3 text-sm font-medium text-foreground">
+          {keyword?.reviewSources.length ? 'Conectar otra página' : 'Conectar una página'} <span className="font-normal text-muted-foreground">(opcional)</span>
+        </p>
         <div className="grid gap-4 @lg:grid-cols-2">
           <Field className="@lg:col-span-2" label="Enlace" hint="Una app de App Store o Google Play, una página de Trustpilot o un lugar de Google Maps (también sirve un enlace maps.app.goo.gl).">
             <Input name="rsUrl" type="text" inputMode="url" placeholder="https://apps.apple.com/mx/app/ejemplo/id123456789" />
@@ -154,8 +161,8 @@ export function KeywordForm({ keyword, groups }: { keyword?: Keyword; groups: Gr
         </div>
       </Card>
 
-      <div data-slot="form-actions" className="flex items-center justify-between gap-3">
-        <span className="text-xs text-muted-foreground">{editing ? null : 'Un término nuevo recupera de inmediato los últimos 30 días.'}</span>
+      <div data-slot="form-actions" className="flex items-center justify-between gap-3 border-t pt-4">
+        <span className="text-xs text-pretty text-muted-foreground">{editing ? null : 'Un término nuevo recupera de inmediato los últimos 30 días.'}</span>
         <SubmitButton>{editing ? 'Guardar cambios' : 'Agregar término'}</SubmitButton>
       </div>
     </ActionForm>

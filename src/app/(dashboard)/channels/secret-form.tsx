@@ -1,6 +1,7 @@
 'use client';
 
 /** A form whose action may hand back a one-time secret: shows it once, with copy and a warning. */
+import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useActionState, type ReactNode } from 'react';
 import { Notice } from '@/components/ui';
@@ -35,7 +36,7 @@ export function SecretForm({
 
 function SecretBox({ secret, title, warning, href }: { secret: string; title: string; warning: string; href?: string }) {
   return (
-    <Notice tone="warn" title={title} className="mt-4">
+    <Notice tone="warn" title={title} className="mt-4 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 duration-200">
       <p>{warning}</p>
       <InputGroup className="mt-3 bg-background">
         <InputGroupInput readOnly value={secret} aria-label={title} className="font-mono text-xs" />
@@ -44,7 +45,9 @@ function SecretBox({ secret, title, warning, href }: { secret: string; title: st
         </InputGroupAddon>
       </InputGroup>
       {href ? (
-        <Link href={href} className="mt-3 inline-block text-xs text-primary hover:underline">Ya la guardé, continuar ›</Link>
+        <Link href={href} className="mt-3 inline-flex items-center gap-1 rounded-sm text-xs font-medium text-primary hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none">
+          Ya la guardé, continuar <ArrowRight aria-hidden className="size-3.5" />
+        </Link>
       ) : null}
     </Notice>
   );

@@ -1,7 +1,6 @@
 import { MentionTable } from '@/components/mention-table';
-import { Download, Radio } from 'lucide-react';
-import { EmptyState, Field, Input, LinkButton, PageHeader, buttonClass } from '@/components/ui';
-import { InfoTip } from '@/components/info-tip';
+import { ChevronLeft, ChevronRight, Download, Radio } from 'lucide-react';
+import { DataView, EmptyState, Field, Input, LinkButton, buttonClass } from '@/components/ui';
 import { ActionForm, SubmitButton } from '@/components/ui/client';
 import { mentio, unwrap } from '@/lib/mentio';
 import type { SearchParams } from '@/lib/params';
@@ -41,10 +40,20 @@ export default async function MentionsPage({ searchParams }: { searchParams: Pro
   const viewConditions = view ? describeFilter(fromViewFilter(view.filter), options.names) : [];
 
   return (
-    <div>
-      <PageHeader
-        title={view ? view.name : <span className="inline-flex items-center gap-1">Menciones <InfoTip term="menciones" /></span>}
-        description={view ? view.description || 'Vista guardada. Los filtros siguientes acotan los resultados.' : 'Conversación pública que coincide con los términos monitoreados, de la más reciente a la más antigua.'}
+    <DataView
+        title={view ? view.name : 'Menciones'}
+        notice={
+          <>
+            {requestedViewId && !view ? <span className="text-amber-600 dark:text-amber-500">Esta vista ya no existe; se muestran todas las menciones.</span> : null}
+            {view ? (
+              <span>
+                Vista <span className="font-medium text-foreground">{view.name}</span>: {viewConditions.length ? viewConditions.join(' · ') : 'todas las menciones'}
+              </span>
+            ) : (
+              <span>Conversación pública que coincide con los términos monitoreados, de la más reciente a la más antigua.</span>
+            )}
+          </>
+        }
         actions={
           <>
             {view ? <LinkButton href={`/views/${encodeURIComponent(view.id)}`}>Editar vista</LinkButton> : null}
@@ -53,9 +62,7 @@ export default async function MentionsPage({ searchParams }: { searchParams: Pro
             </a>
           </>
         }
-      />
-
-      <MentionFilters
+        toolbar={<MentionFilters
         keywords={options.keywords.map(([value, label]) => ({ value, label }))}
         groups={options.groups.map(([value, label]) => ({ value, label }))}
         views={views.data.map((v) => ({ id: v.id, name: v.name }))}
@@ -77,15 +84,8 @@ export default async function MentionsPage({ searchParams }: { searchParams: Pro
             </div>
           </ActionForm>
         }
-      />
-
-      {requestedViewId && !view ? <p className="text-sm text-amber-700">Esta vista ya no existe; se muestran todas las menciones.</p> : null}
-
-      {view ? (
-        <p className="-mt-2 mb-4 text-xs text-muted-foreground">
-          Vista <span className="font-medium text-foreground">{view.name}</span>: {viewConditions.length ? viewConditions.join(' · ') : 'todas las menciones'}
-        </p>
-      ) : null}
+      />}
+    >
 
       {page.data.length === 0 ? (
         <EmptyState
@@ -100,11 +100,12 @@ export default async function MentionsPage({ searchParams }: { searchParams: Pro
         <MentionTable mentions={page.data} />
       )}
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-        {cursor ? <LinkButton href={firstHref} size="sm">‹ Más recientes</LinkButton> : <span />}
-        {olderHref ? <LinkButton href={olderHref}>Menciones anteriores ›</LinkButton> : null}
-      </div>
-
-    </div>
+      {cursor || olderHref ? (
+        <nav aria-label="Paginación" data-slot="pager" className="mt-4 flex flex-wrap items-center justify-between gap-2">
+          {cursor ? <LinkButton href={firstHref} size="sm" className="pressable"><ChevronLeft aria-hidden /> Más recientes</LinkButton> : <span />}
+          {olderHref ? <LinkButton href={olderHref} size="sm" className="pressable">Menciones anteriores <ChevronRight aria-hidden /></LinkButton> : null}
+        </nav>
+      ) : null}
+    </DataView>
   );
 }

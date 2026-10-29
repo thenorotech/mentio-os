@@ -1,11 +1,13 @@
 import { notFound } from 'next/navigation';
-import { Badge, Card, LinkButton, Notice, PageHeader, Stat, Table, td, TableCell, TableRow } from '@/components/ui';
+import { ExternalLink, SlidersHorizontal, Star } from 'lucide-react';
+import { Badge, Card, LinkButton, Notice, PageHeader, SectionHeading, Stat, TONE_TEXT, Table, td, TableCell, TableRow, KpiStrip } from '@/components/ui';
+import { Progress } from '@/components/ui/progress';
 import { InfoTip } from '@/components/info-tip';
 import { compact, date, platformName, timeAgo } from '@/lib/format';
 import { mentio, unwrap } from '@/lib/mentio';
 import { KeywordActions } from '../keyword-actions';
 import { KeywordForm } from '../keyword-form';
-import { KeywordBadges, KIND_LABELS, platformsLabel, variantOf } from '../shared';
+import { KeywordBadges, KindBadge, KIND_LABELS, platformsLabel, variantOf } from '../shared';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Término monitoreado' };
@@ -18,24 +20,28 @@ export default async function KeywordDetail({ params }: { params: Promise<{ id: 
   const keyword = unwrap(result);
   const { stats } = keyword;
   const mentionsHref = `/mentions?keywordIds=${encodeURIComponent(keyword.id)}`;
+  const variant = variantOf(keyword.context);
+  const capUsed = keyword.cap ? Math.min(100, (stats.thisMonth / Math.max(1, keyword.cap.mentions)) * 100) : 0;
 
   return (
     <div className="space-y-6">
       <PageHeader
         back={{ href: '/keywords', label: 'Candidatos y temas' }}
-        title={
-          <span className="flex flex-wrap items-center gap-2">
-            {keyword.term}
-            <Badge tone={keyword.kind === 'brand' ? 'accent' : keyword.kind === 'competitor' ? 'warn' : 'neutral'}>{KIND_LABELS[keyword.kind]}</Badge>
-            {variantOf(keyword.context) ? <Badge tone="outline">Variante de {variantOf(keyword.context)}</Badge> : null}
-            <KeywordBadges keyword={keyword} />
+        title={keyword.term}
+        description={
+          <span className="flex flex-col gap-2">
+            <span className="flex flex-wrap items-center gap-1">
+              <KindBadge kind={keyword.kind} />
+              {variant ? <Badge tone="outline">Variante de {variant}</Badge> : null}
+              <KeywordBadges keyword={keyword} />
+            </span>
+            <span>{`${KIND_LABELS[keyword.kind]} en ${keyword.group.name}. ${platformsLabel(keyword)}. Monitoreado desde ${date(keyword.createdAt)}.`}</span>
           </span>
         }
-        description={`${KIND_LABELS[keyword.kind]} en ${keyword.group.name}. ${platformsLabel(keyword)}. Monitoreado desde ${date(keyword.createdAt)}.`}
         actions={
           <>
-            <LinkButton href={mentionsHref}>Ver menciones</LinkButton>
             <KeywordActions keyword={keyword} backToList size="md" />
+            <LinkButton href={mentionsHref} variant="secondary">Ver menciones</LinkButton>
           </>
         }
       />
@@ -49,25 +55,23 @@ export default async function KeywordDetail({ params }: { params: Promise<{ id: 
         </Notice>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-3 @4xl:grid-cols-5">
+      <KpiStrip label="Actividad del término">
         <Stat label={<span className="inline-flex items-center gap-1">Menciones <InfoTip term="menciones" /></span>} value={compact(stats.mentions)} hint="todas las coincidencias" href={mentionsHref} />
         <Stat label={<span className="inline-flex items-center gap-1">Relevantes <InfoTip term="relevancia" /></span>} value={compact(stats.relevant)} hint={`${stats.feedback.relevant} marcadas relevantes, ${stats.feedback.notRelevant} no relevantes`} />
         <Stat label={<span className="inline-flex items-center gap-1">Últimos 7 días <InfoTip term="menciones" /></span>} value={compact(stats.last7d)} hint={stats.lastMentionAt ? `última ${timeAgo(stats.lastMentionAt)}` : 'sin menciones'} />
         <Stat label={<span className="inline-flex items-center gap-1">Este mes <InfoTip term="menciones" /></span>} value={compact(stats.thisMonth)} hint={keyword.cap ? `límite ${compact(keyword.cap.mentions)}` : 'sin límite'} />
-      </div>
+      </KpiStrip>
 
       <div className="grid gap-6 @4xl:grid-cols-2">
-        <Card title={<span className="inline-flex items-center gap-1">Límite mensual de menciones <InfoTip term="menciones" /></span>}>
+        <Card index={1} title={<span className="inline-flex items-center gap-1">Límite mensual de menciones <InfoTip term="menciones" /></span>} description="Por mes calendario (UTC).">
           {keyword.cap ? (
-            <div className="space-y-2 text-sm">
-              <p>
-                {compact(stats.thisMonth)} de {compact(keyword.cap.mentions)} menciones usadas este mes (UTC).
+            <div className="space-y-3 text-sm">
+              <p className="tabular-nums">
+                <span className="font-semibold">{compact(stats.thisMonth)}</span> de {compact(keyword.cap.mentions)} menciones usadas este mes
               </p>
-              <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, (stats.thisMonth / Math.max(1, keyword.cap.mentions)) * 100)}%` }} />
-              </div>
+              <Progress value={capUsed} aria-label="Uso del límite mensual de menciones" />
               {keyword.pausedForCap ? (
-                <p className="text-amber-700">Alcanzó el límite: no registrará coincidencias hasta el primer día del próximo mes o hasta que aumentes el límite. Aun así, cuenta como día de monitoreo.</p>
+                <p className={`text-pretty ${TONE_TEXT.warning}`}>Alcanzó el límite: no registrará coincidencias hasta el primer día del próximo mes o hasta que aumentes el límite. Aun así, cuenta como día de monitoreo.</p>
               ) : null}
             </div>
           ) : (
@@ -75,50 +79,57 @@ export default async function KeywordDetail({ params }: { params: Promise<{ id: 
           )}
         </Card>
 
-        <Card title={<span className="inline-flex items-center gap-1">Actualización por plataforma <InfoTip text="Momento en que cada canal buscó publicaciones nuevas para este término." /></span>} description="Consulta el estado del monitoreo. Las plataformas con transmisión en vivo, como Bluesky, no muestran un registro.">
+        <Card index={2} title="Actualización por plataforma" hint="Momento en que cada canal buscó publicaciones nuevas para este término." description="Las plataformas con transmisión en vivo, como Bluesky, no muestran un registro.">
           {keyword.polling.length === 0 ? (
             <p className="text-sm text-muted-foreground">Aún no se consulta.</p>
           ) : (
-            <ul className="divide-y divide-line text-sm">
+            <dl className="divide-y text-sm">
               {keyword.polling.map((p) => (
-                <li key={p.platform} className="flex items-center justify-between gap-2 py-1.5">
-                  <span>{platformName(p.platform)}</span>
-                  <span className="flex items-center gap-2 text-xs text-muted-foreground">
-                    {p.lastPolledAt ? timeAgo(p.lastPolledAt) : 'nunca'}
-                    {p.emptyPolls > 0 ? <Badge tone={p.emptyPolls >= 10 ? 'warn' : 'neutral'}>{p.emptyPolls} consultas vacías seguidas</Badge> : null}
-                  </span>
-                </li>
+                <div key={p.platform} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2 first:pt-0 last:pb-0">
+                  <dt className="text-muted-foreground">{platformName(p.platform)}</dt>
+                  <dd className="flex flex-wrap items-center justify-end gap-2 text-right">
+                    <span className={p.lastPolledAt ? 'text-foreground' : 'text-muted-foreground'}>{p.lastPolledAt ? timeAgo(p.lastPolledAt) : 'Nunca'}</span>
+                    {p.emptyPolls > 0 ? <Badge tone={p.emptyPolls >= 10 ? 'warn' : 'neutral'} className="tabular-nums">{p.emptyPolls} consultas vacías seguidas</Badge> : null}
+                  </dd>
+                </div>
               ))}
-            </ul>
+            </dl>
           )}
         </Card>
       </div>
 
       {keyword.reviewSources.length > 0 ? (
-        <Table head={[
-          <span className="inline-flex items-center gap-1">Página de reseñas <InfoTip text="Página conectada para recibir y monitorear reseñas." /></span>,
-          <span className="inline-flex items-center gap-1">Países <InfoTip text="Mercados de App Store o Google Play que se consultan." /></span>,
-          <span className="inline-flex items-center gap-1">Idioma <InfoTip text="Idioma de reseñas que se consulta cuando la plataforma permite elegirlo." /></span>,
-          <span className="inline-flex items-center gap-1">Conectada <InfoTip text="Fecha en que se agregó esta página al monitoreo." /></span>,
-        ]}>
-          {keyword.reviewSources.map((src) => (
-            <TableRow key={`${src.platform}:${src.id}`}>
-              <TableCell className={td}>
-                {platformName(src.platform)}{' '}
-                <a href={src.url} target="_blank" rel="noreferrer" className="break-all text-primary hover:underline">{src.id}</a>
-              </TableCell>
-              <TableCell className={`${td} text-xs text-muted-foreground`}>{src.countries.join(', ').toUpperCase() || 'Una página'}</TableCell>
-              <TableCell className={`${td} text-xs text-muted-foreground`}>{src.language ?? ''}</TableCell>
-              <TableCell className={`${td} text-xs text-muted-foreground`}>{date(src.connectedAt)}</TableCell>
-            </TableRow>
-          ))}
-        </Table>
+        <section aria-labelledby="keyword-review-sources" className="space-y-3">
+          <SectionHeading id="keyword-review-sources" icon={Star} title="Páginas de reseñas" description="Cada reseña de estas páginas se registra como mención." />
+          <Table head={[
+            <span className="inline-flex items-center gap-1">Página de reseñas <InfoTip text="Página conectada para recibir y monitorear reseñas." /></span>,
+            <span className="inline-flex items-center gap-1">Países <InfoTip text="Mercados de App Store o Google Play que se consultan." /></span>,
+            <span className="inline-flex items-center gap-1">Idioma <InfoTip text="Idioma de reseñas que se consulta cuando la plataforma permite elegirlo." /></span>,
+            <span className="inline-flex items-center gap-1">Conectada <InfoTip text="Fecha en que se agregó esta página al monitoreo." /></span>,
+          ]}>
+            {keyword.reviewSources.map((src) => (
+              <TableRow key={`${src.platform}:${src.id}`}>
+                <TableCell className={td}>
+                  <span className="font-medium">{platformName(src.platform)}</span>{' '}
+                  <a href={src.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-sm break-all text-primary hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none">
+                    {src.id}
+                    <ExternalLink aria-hidden className="size-3 shrink-0" />
+                    <span className="sr-only">(se abre en otra pestaña)</span>
+                  </a>
+                </TableCell>
+                <TableCell className={`${td} text-xs text-muted-foreground`}>{src.countries.join(', ').toUpperCase() || 'Una página'}</TableCell>
+                <TableCell className={`${td} text-xs text-muted-foreground`}>{src.language ?? '—'}</TableCell>
+                <TableCell className={`${td} text-xs text-muted-foreground`}>{date(src.connectedAt)}</TableCell>
+              </TableRow>
+            ))}
+          </Table>
+        </section>
       ) : null}
 
-      <div>
-        <h2 className="mb-3 text-lg font-semibold">Ajustes</h2>
+      <section aria-labelledby="keyword-settings" className="space-y-4">
+        <SectionHeading id="keyword-settings" icon={SlidersHorizontal} title="Ajustes" description="Qué se busca, dónde y qué se descarta." />
         <KeywordForm keyword={keyword} groups={groups.data} />
-      </div>
+      </section>
     </div>
   );
 }

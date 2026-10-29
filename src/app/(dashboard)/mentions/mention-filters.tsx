@@ -47,6 +47,7 @@ export function MentionFilters({
 
   return (
     <UrlFilters
+        className="grid gap-2"
         filters={mentionFilterDefs(keywords, groups, { window: true, person: params.has('personId'), alert: params.has('alertId') })}
         search={{ placeholder: 'Buscar texto de la mención' }}
         sort={{ options: SORTS }}

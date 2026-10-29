@@ -29,30 +29,31 @@ export function MentionRowMenu({ id, status, url, platform }: { id: string; stat
     });
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label="Acciones de la mención" disabled={pending} />}>
-        <MoreHorizontal />
+      <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label="Acciones de la mención" aria-busy={pending || undefined} disabled={pending} />}>
+        <MoreHorizontal aria-hidden />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem render={<Link href={`/mentions/${id}`} />}>
-          <SquareArrowOutUpRight /> Abrir mención
+          <SquareArrowOutUpRight aria-hidden /> Abrir mención
         </DropdownMenuItem>
         <DropdownMenuItem render={<a href={url} target="_blank" rel="noopener noreferrer" />}>
-          <ExternalLink /> Ver en {platform}
+          <ExternalLink aria-hidden /> Ver en {platform}
+          <span className="sr-only">(se abre en otra pestaña)</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         {status !== 'done' ? (
           <DropdownMenuItem onClick={() => setStatus('done')}>
-            <Check /> Marcar como resuelta
+            <Check aria-hidden /> Marcar como resuelta
           </DropdownMenuItem>
         ) : null}
         {status !== 'ignored' ? (
           <DropdownMenuItem onClick={() => setStatus('ignored')}>
-            <CircleSlash /> Ignorar
+            <CircleSlash aria-hidden /> Ignorar
           </DropdownMenuItem>
         ) : null}
         {status !== 'open' ? (
           <DropdownMenuItem onClick={() => setStatus('open')}>
-            <RotateCcw /> Reabrir
+            <RotateCcw aria-hidden /> Reabrir
           </DropdownMenuItem>
         ) : null}
       </DropdownMenuContent>

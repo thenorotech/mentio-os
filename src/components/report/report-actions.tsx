@@ -48,20 +48,17 @@ export function ReportActions({ whatsappText }: { whatsappText: string }) {
   }
 
   return (
-    <div className="flex flex-wrap gap-2" aria-label="Acciones del reporte">
-      <Button type="button" variant="default" onClick={() => window.print()}>
-        <Printer aria-hidden="true" />
-        Imprimir / Guardar PDF
-      </Button>
-      <Button
-        type="button"
-        variant="outline"
-        onClick={copySummary}
-      >
+    <div role="group" aria-label="Acciones del reporte" className="flex flex-wrap items-center gap-2 @lg:justify-end">
+      <Button type="button" variant="outline" onClick={copySummary} className="pressable">
         {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
         {copied ? 'Resumen copiado' : 'Copiar para WhatsApp'}
       </Button>
-      {copyFailed ? <p role="status" className="basis-full text-xs text-destructive">No se pudo copiar el resumen. Revisa los permisos del portapapeles.</p> : null}
+      <Button type="button" variant="default" onClick={() => window.print()} className="pressable">
+        <Printer aria-hidden="true" />
+        Imprimir o guardar PDF
+      </Button>
+      <span role="status" aria-live="polite" className="sr-only">{copied ? 'El resumen se copió al portapapeles.' : ''}</span>
+      {copyFailed ? <p role="alert" className="basis-full text-xs text-destructive @lg:text-right">No se pudo copiar el resumen. Revisa los permisos del portapapeles del navegador.</p> : null}
     </div>
   );
 }

@@ -1,8 +1,8 @@
-import Link from 'next/link';
 import { Suspense } from 'react';
-import { ArrowUpRight, ChartNoAxesCombined, FileText, Megaphone } from 'lucide-react';
+import { ArrowUpRight, ChartNoAxesCombined, FileText, Hash, Info, Megaphone, TrafficCone } from 'lucide-react';
 import type { AnalyticsSummary, Mention } from '@mentio-dev/sdk';
-import { Badge, Card, EmptyState, LinkButton, PageHeader, buttonClass } from '@/components/ui';
+import { Badge, EmptyState, KpiStrip, LinkButton, PageHeader, SectionHeading, Stat, TONE_TEXT, cx } from '@/components/ui';
+import { LinkToggle } from '@/components/ui/client';
 import { ReportActions } from '@/components/report/report-actions';
 import { SocialReportSection, SocialReportSkeleton, loadSocialReport } from '@/components/report/social-section';
 import styles from '@/components/report/report-print.module.css';
@@ -19,6 +19,12 @@ const RANGE = '30d';
 
 function lightEmoji(color: ReturnType<typeof trafficLight>['color']) {
   return color === 'green' ? '🟢' : color === 'yellow' ? '🟡' : color === 'red' ? '🔴' : '⚪';
+}
+
+/** The light as a dot: the status classes (no hex), always next to its label. */
+function lightDot(color: ReturnType<typeof trafficLight>['color']) {
+  const tone = color === 'green' ? TONE_TEXT.positive : color === 'yellow' ? TONE_TEXT.warning : color === 'red' ? TONE_TEXT.negative : 'text-muted-foreground/60';
+  return `bg-current ${tone}`;
 }
 
 function lightTone(color: ReturnType<typeof trafficLight>['color']): 'good' | 'warn' | 'bad' | 'neutral' {
@@ -79,7 +85,7 @@ export default async function ReportePage({ searchParams }: { searchParams: Prom
     return (
       <div>
         <PageHeader title="Reporte ejecutivo" description="Una lectura clara de la conversación de tu candidato en los últimos 30 días." />
-        <EmptyState icon={FileText} title="Aún no registras tu candidato." action={<LinkButton href="/arranque" variant="primary">Ir al asistente</LinkButton>}>
+        <EmptyState icon={FileText} title="Aún no registras a tu candidato" action={<LinkButton href="/arranque" variant="primary">Ir al asistente de arranque</LinkButton>}>
           Cuando agregues el nombre de tu candidato, aquí podrás imprimir el reporte y compartir su resumen.
         </EmptyState>
       </div>
@@ -163,146 +169,156 @@ export default async function ReportePage({ searchParams }: { searchParams: Prom
   ].join('\n');
 
   const candidateHref = (id: string) => `/reporte?candidate=${encodeURIComponent(id)}`;
+  const reachLabel = (mention: Mention) => (mention.post.engagement?.views !== null && mention.post.engagement?.views !== undefined ? 'vistas' : 'seguidores estimados');
+
+  // The KPI strip reads the numbers already fetched above: no extra request.
+  const previousMatched = summary.previous.matched;
+  const matchedDelta = previousMatched > 0 ? ((summary.matched - previousMatched) / previousMatched) * 100 : null;
+  const classified = summary.sentiment.positive + summary.sentiment.neutral + summary.sentiment.negative;
+  const positiveShare = sharePercent(summary.sentiment.positive, classified);
+  const negativeShare = sharePercent(summary.sentiment.negative, classified);
+  const candidateShare = sharePercent(candidateCount, totalFaceoff);
 
   return (
-    <article className={`${styles.sheet} space-y-4`}>
-      <div className={`${styles.toolbar} flex flex-wrap items-start justify-between gap-3`}>
+    <article className={cx(styles.sheet, 'grid gap-6')} aria-labelledby="report-title">
+      <div className={cx(styles.toolbar, '[&>header]:mb-0')}>
         <PageHeader
           title="Reporte ejecutivo"
-          description={`Resumen de la conversación · ${candidate.name} · últimos 30 días`}
-          actions={candidates.length > 1 ? (
-            <nav className="flex flex-wrap gap-2" aria-label="Selecciona candidato">
-              {candidates.map((entity) => (
-                <Link
-                  key={entity.mainId}
-                  href={candidateHref(entity.mainId)}
-                  aria-current={entity.mainId === candidate.mainId ? 'page' : undefined}
-                  className={buttonClass(entity.mainId === candidate.mainId ? 'primary' : 'secondary', 'sm')}
-                >
-                  {entity.name}
-                </Link>
-              ))}
-            </nav>
-          ) : null}
+          description={`Resumen de la conversación de ${candidate.name} en los últimos 30 días, listo para imprimir o compartir.`}
+          actions={(
+            <>
+              {candidates.length > 1 ? (
+                <div role="group" aria-label="Candidato del reporte">
+                  <LinkToggle
+                    current={candidate.mainId}
+                    items={candidates.map((entity) => ({ value: entity.mainId, label: entity.name, href: candidateHref(entity.mainId) }))}
+                  />
+                </div>
+              ) : null}
+              <ReportActions whatsappText={shareText} />
+            </>
+          )}
         />
-        <ReportActions whatsappText={shareText} />
       </div>
 
-      <header className="flex flex-wrap items-end justify-between gap-3 border-b pb-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Ágora · Reporte de campaña</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">{candidate.name}</h1>
-          <p className={`${styles.muted} mt-1 text-sm text-muted-foreground`}>{fromDate} al {reportDate} · últimos 30 días</p>
+      <header className={cx(styles.section, 'flex flex-wrap items-end justify-between gap-3 border-b pb-4')}>
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold tracking-wide text-primary uppercase">Ágora · Reporte de campaña</p>
+          <h2 id="report-title" className="mt-1 text-xl font-semibold tracking-tight text-balance">{candidate.name}</h2>
+          <p className={cx(styles.muted, 'mt-1 text-sm text-muted-foreground tabular-nums')}>Del {fromDate} al {reportDate}</p>
         </div>
-        <div className="text-right text-sm">
-          <p className={`${styles.muted} text-muted-foreground`}>Fecha del reporte</p>
-          <p className="font-medium">{reportDate}</p>
-        </div>
+        <dl className="text-sm @lg:text-right">
+          <dt className={cx(styles.muted, 'text-xs text-muted-foreground')}>Fecha del reporte</dt>
+          <dd className="font-medium tabular-nums">{reportDate}</dd>
+        </dl>
       </header>
 
-      <section className={`${styles.section} rounded-xl border bg-card p-4 shadow-xs`} aria-labelledby="report-light-heading">
-        <div className="flex flex-wrap items-start gap-3">
-          <span className="mt-0.5 text-3xl" aria-hidden="true">{lightEmoji(light.color)}</span>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 id="report-light-heading" className="text-base font-semibold">Semáforo del candidato</h2>
-              <Badge tone={lightTone(light.color)}>{light.label}</Badge>
+      <KpiStrip label="Indicadores del periodo" className={styles.section}>
+        <Stat label="Menciones" value={compact(summary.matched)} delta={matchedDelta} hint={previousMatched > 0 ? `${compact(previousMatched)} el periodo anterior` : 'Sin periodo anterior para comparar'} />
+        <Stat label="Participación de voz" value={`${candidateShare.toFixed(1)}%`} hint={competitors.length ? 'Frente a sus adversarios' : 'Sin adversarios activos'} />
+        <Stat label="Positivas" value={`${positiveShare.toFixed(0)}%`} tone={classified > 0 && positiveShare > negativeShare ? 'positive' : 'default'} hint={`${compact(summary.sentiment.positive)} menciones`} />
+        <Stat label="Negativas" value={`${negativeShare.toFixed(0)}%`} tone={classified > 0 && negativeShare > positiveShare ? 'negative' : 'default'} hint={`${compact(summary.sentiment.negative)} menciones`} />
+      </KpiStrip>
+
+      <section className={cx(styles.section, 'grid gap-4 rounded-xl border bg-card p-4 shadow-xs')} aria-labelledby="report-light-heading">
+        <SectionHeading
+          id="report-light-heading"
+          icon={TrafficCone}
+          title="Semáforo del candidato"
+          description="Tono y volumen de la conversación frente al periodo anterior."
+          aside={(
+            <span className="flex flex-wrap items-center gap-1.5">
+              <Badge tone={lightTone(light.color)}>
+                <span aria-hidden className={cx('size-2 rounded-full', lightDot(light.color))} />
+                {light.label}
+              </Badge>
               {light.isCrisis ? <Badge tone="bad">Crisis</Badge> : null}
-            </div>
-            <p className="mt-2 max-w-3xl text-sm leading-6">{sentence}</p>
-          </div>
-        </div>
+            </span>
+          )}
+        />
+        <p className="max-w-3xl text-sm leading-6 text-pretty">{sentence}</p>
       </section>
 
-      <section className={`${styles.section} rounded-xl border bg-card p-4 shadow-xs`} aria-labelledby="report-share-heading">
-        <div className="mb-3 flex items-center gap-2">
-          <ChartNoAxesCombined className="size-4 text-primary" aria-hidden="true" />
-          <div>
-            <h2 id="report-share-heading" className="text-sm font-semibold">Cara a cara · participación de voz</h2>
-            <p className={`${styles.muted} text-xs text-muted-foreground`}>Comparación de menciones del candidato y sus adversarios.</p>
-          </div>
-        </div>
+      <section className={cx(styles.section, 'grid gap-4 rounded-xl border bg-card p-4 shadow-xs')} aria-labelledby="report-share-heading">
+        <SectionHeading
+          id="report-share-heading"
+          icon={ChartNoAxesCombined}
+          title="Cara a cara · participación de voz"
+          description="Menciones del candidato frente a sus tres adversarios con más conversación."
+        />
         {faceoffRows.length > 1 || candidateCount > 0 ? (
-          <div className="space-y-3">
+          <ul className="grid gap-3">
             {faceoffRows.map((row) => {
               const share = sharePercent(row.matched, totalFaceoff);
               return (
-                <div key={row.mainId}>
+                <li key={row.mainId}>
                   <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2 text-sm">
-                    <span className="font-medium">{row.name}{row.selected ? ' · tu candidato' : ''}</span>
-                    <span className="tabular-nums">{share.toFixed(1)}% <span className={`${styles.muted} text-xs text-muted-foreground`}>({compact(row.matched)})</span></span>
+                    <span className="flex min-w-0 items-center gap-1.5 font-medium">
+                      <span className="truncate">{row.name}</span>
+                      {row.selected ? <Badge tone="accent">Tu candidato</Badge> : null}
+                    </span>
+                    <span className="tabular-nums">
+                      {share.toFixed(1)}% <span className={cx(styles.muted, 'text-xs text-muted-foreground')}>({compact(row.matched)} menciones)</span>
+                    </span>
                   </div>
-                  <div className="h-2.5 overflow-hidden rounded-full bg-muted" role="img" aria-label={`${row.name}: ${share.toFixed(1)} por ciento de participación de voz`}>
-                    <div className={`h-full rounded-full ${row.selected ? 'bg-primary' : 'bg-foreground/45'}`} style={{ width: `${Math.max(share, row.matched ? 1 : 0)}%` }} />
+                  <div className={cx(styles.bar, 'h-2 overflow-hidden rounded-full bg-muted')} role="img" aria-label={`${row.name}: ${share.toFixed(1)} por ciento de participación de voz`}>
+                    <div className={cx('h-full rounded-full', row.selected ? 'bg-primary' : 'bg-foreground/40')} style={{ width: `${Math.max(share, row.matched ? 1 : 0)}%` }} />
                   </div>
-                </div>
+                </li>
               );
             })}
-            {!competitors.length ? <p className={`${styles.muted} text-xs text-muted-foreground`}>Aún no hay adversarios activos para comparar.</p> : null}
-          </div>
+            {!competitors.length ? <li className={cx(styles.muted, 'text-xs text-muted-foreground')}>Aún no hay adversarios activos para comparar.</li> : null}
+          </ul>
         ) : (
-          <p className={`${styles.muted} text-sm text-muted-foreground`}>Aún no hay menciones del candidato o sus adversarios en este periodo.</p>
+          <p className={cx(styles.muted, 'rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground')}>Aún no hay menciones del candidato ni de sus adversarios en este periodo.</p>
         )}
       </section>
 
       <div className="grid gap-4 @4xl:grid-cols-2">
-        <section className={`${styles.section} rounded-xl border bg-card p-4 shadow-xs`} aria-labelledby="report-topics-heading">
-          <div className="mb-3 flex items-center gap-2">
-            <ChartNoAxesCombined className="size-4 text-primary" aria-hidden="true" />
-            <div>
-              <h2 id="report-topics-heading" className="text-sm font-semibold">Temas principales</h2>
-              <p className={`${styles.muted} text-xs text-muted-foreground`}>Los tres temas de agenda con más menciones.</p>
-            </div>
-          </div>
+        <section className={cx(styles.section, 'grid content-start gap-4 rounded-xl border bg-card p-4 shadow-xs')} aria-labelledby="report-topics-heading">
+          <SectionHeading id="report-topics-heading" icon={Hash} title="Temas principales" description="Los tres temas de agenda con más menciones." />
           {rankedTopics.length ? (
             <ol className="divide-y">
               {rankedTopics.map((topic, index) => (
                 <li key={topic.mainId} className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
-                  <span className="flex min-w-0 items-center gap-2">
-                    <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">{index + 1}</span>
+                  <span className="flex min-w-0 items-center gap-2.5">
+                    <span aria-hidden className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-semibold tabular-nums text-muted-foreground">{index + 1}</span>
                     <span className="truncate text-sm font-medium">{topic.name}</span>
                   </span>
-                  <span className={`${styles.muted} whitespace-nowrap text-xs tabular-nums text-muted-foreground`}>{compact(topic.matched)} menciones</span>
+                  <span className={cx(styles.muted, 'text-xs whitespace-nowrap text-muted-foreground tabular-nums')}>{compact(topic.matched)} menciones</span>
                 </li>
               ))}
             </ol>
           ) : (
-          <p className={`${styles.muted} text-sm text-muted-foreground`}>{topics.length ? 'Aún no hay menciones de temas de agenda.' : 'Aún no registras temas activos para la agenda.'}</p>
+            <p className={cx(styles.muted, 'rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground')}>{topics.length ? 'Aún no hay menciones de los temas de agenda.' : 'Aún no registras temas activos para la agenda.'}</p>
           )}
         </section>
 
-        <section className={`${styles.section} rounded-xl border bg-card p-4 shadow-xs`} aria-labelledby="report-posts-heading">
-          <div className="mb-3 flex items-center gap-2">
-            <Megaphone className="size-4 text-primary" aria-hidden="true" />
-            <div>
-              <h2 id="report-posts-heading" className="text-sm font-semibold">Publicaciones con más alcance</h2>
-              <p className={`${styles.muted} text-xs text-muted-foreground`}>Entre las menciones del candidato en este periodo.</p>
-            </div>
-          </div>
+        <section className={cx(styles.section, 'grid content-start gap-4 rounded-xl border bg-card p-4 shadow-xs')} aria-labelledby="report-posts-heading">
+          <SectionHeading id="report-posts-heading" icon={Megaphone} title="Publicaciones con más alcance" description="Entre las menciones del candidato en este periodo." />
           {topMentions.length ? (
-            <ol className="space-y-3">
+            <ol className="divide-y">
               {topMentions.map((mention, index) => {
                 const reach = mentionReach(mention);
                 return (
-                  <li key={mention.id} className="border-t pt-2.5 first:border-0 first:pt-0">
-                    <div className="flex items-start gap-2">
-                      <span className="mt-0.5 text-xs font-semibold text-muted-foreground">{index + 1}.</span>
-                      <div className="min-w-0 flex-1">
-                        <a href={mention.post.url} target="_blank" rel="noreferrer" className="line-clamp-2 text-sm hover:text-primary">
-                          {shortText(mention.post.text)} <ArrowUpRight className="inline size-3.5" aria-hidden="true" />
-                        </a>
-                        <p className={`${styles.muted} mt-1 text-xs text-muted-foreground`}>
-                          {mention.author?.name ?? mention.author?.handle ?? 'Publicación'}
-                          {reach !== null ? ` · ${compact(reach)} ${mention.post.engagement?.views !== null && mention.post.engagement?.views !== undefined ? 'vistas' : 'seguidores estimados'}` : ' · alcance sin dato'}
-                        </p>
-                      </div>
+                  <li key={mention.id} className="flex items-start gap-2.5 py-2.5 first:pt-0 last:pb-0">
+                    <span aria-hidden className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-semibold tabular-nums text-muted-foreground">{index + 1}</span>
+                    <div className="min-w-0 flex-1">
+                      <a href={mention.post.url} target="_blank" rel="noreferrer" className="line-clamp-2 rounded-sm text-sm text-pretty transition-colors hover:text-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none">
+                        {shortText(mention.post.text)} <ArrowUpRight className="inline size-3.5" aria-hidden="true" />
+                        <span className="sr-only"> (se abre en otra pestaña)</span>
+                      </a>
+                      <p className={cx(styles.muted, 'mt-1 text-xs text-muted-foreground tabular-nums')}>
+                        {mention.author?.name ?? mention.author?.handle ?? 'Publicación'}
+                        {reach !== null ? ` · ${compact(reach)} ${reachLabel(mention)}` : ' · alcance sin dato'}
+                      </p>
                     </div>
                   </li>
                 );
               })}
             </ol>
           ) : (
-            <p className={`${styles.muted} text-sm text-muted-foreground`}>Aún no hay publicaciones del candidato en este periodo.</p>
+            <p className={cx(styles.muted, 'rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground')}>Aún no hay publicaciones del candidato en este periodo.</p>
           )}
         </section>
       </div>
@@ -311,8 +327,8 @@ export default async function ReportePage({ searchParams }: { searchParams: Prom
           <SocialReportSection report={socialReport} />
         </Suspense>
       ) : null}
-      <p className={`${styles.muted} flex items-center gap-1.5 text-xs text-muted-foreground`}>
-        <ChartNoAxesCombined className="size-3.5" aria-hidden="true" />
+      <p className={cx(styles.muted, 'flex items-start gap-1.5 text-xs text-pretty text-muted-foreground')}>
+        <Info className="mt-px size-3.5 shrink-0" aria-hidden="true" />
         Los cálculos incluyen todas las variantes activas de cada candidato, adversario y tema.
         {candidate.mainId ? <span className="sr-only">Identificador principal: {candidate.mainId}</span> : null}
       </p>

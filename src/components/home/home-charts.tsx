@@ -15,9 +15,10 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { SENTIMENT_COLORS } from '@/lib/chart-colors';
 
-const AXIS = '#737b8c';
-const GRID = '#e7eaf0';
+const AXIS = 'var(--muted-foreground)';
+const GRID = 'var(--border)';
 const number = new Intl.NumberFormat('es-MX', { notation: 'compact', maximumFractionDigits: 1 });
 
 export type DailyPoint = { date: string; matched: number; positive: number; neutral: number; negative: number };
@@ -49,7 +50,7 @@ export function ConversationChart({ series }: { series: ConversationSeries[] }) 
           <XAxis dataKey="date" tickFormatter={dayLabel} tick={{ fill: AXIS, fontSize: 11 }} tickLine={false} axisLine={false} minTickGap={28} />
           <YAxis tickFormatter={(value: number) => number.format(value)} tick={{ fill: AXIS, fontSize: 11 }} tickLine={false} axisLine={false} width={46} allowDecimals={false} />
           <Tooltip
-            cursor={{ stroke: '#bac1ce', strokeDasharray: '3 3' }}
+            cursor={{ stroke: 'var(--border)', strokeDasharray: '3 3' }}
             content={({ active, payload, label }) => active && payload?.length ? (
               <TooltipBox>
                 <p className="mb-1.5 font-semibold">{dayLabel(String(label))}</p>
@@ -72,7 +73,7 @@ export function PlatformDonut({ data }: { data: PlatformDatum[] }) {
     <div className="h-[230px] w-full" role="img" aria-label="Distribución de menciones por plataforma">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
-          <Pie data={data} dataKey="value" nameKey="label" innerRadius="58%" outerRadius="84%" paddingAngle={2} stroke="#ffffff" strokeWidth={2} isAnimationActive={false}>
+          <Pie data={data} dataKey="value" nameKey="label" innerRadius="58%" outerRadius="84%" paddingAngle={2} stroke="var(--card)" strokeWidth={2} isAnimationActive={false}>
             {data.map((item) => <Cell key={item.label} fill={item.color} />)}
           </Pie>
           <Tooltip
@@ -98,7 +99,7 @@ export function DailyToneChart({ data }: { data: DailyPoint[] }) {
           <XAxis dataKey="date" tickFormatter={dayLabel} tick={{ fill: AXIS, fontSize: 10 }} tickLine={false} axisLine={false} minTickGap={26} />
           <YAxis tickFormatter={(value: number) => number.format(value)} tick={{ fill: AXIS, fontSize: 10 }} tickLine={false} axisLine={false} width={38} allowDecimals={false} />
           <Tooltip
-            cursor={{ fill: '#f2f4f8' }}
+            cursor={{ fill: 'var(--muted)' }}
             content={({ active, payload, label }) => active && payload?.length ? (
               <TooltipBox>
                 <p className="mb-1.5 font-semibold">{dayLabel(String(label))}</p>
@@ -109,9 +110,9 @@ export function DailyToneChart({ data }: { data: DailyPoint[] }) {
             ) : null}
           />
           <Legend verticalAlign="bottom" height={30} iconType="circle" iconSize={7} wrapperStyle={{ fontSize: 11, color: AXIS }} />
-          <Bar dataKey="positive" name="Positivas" stackId="tone" fill="#15803d" isAnimationActive={false} />
-          <Bar dataKey="neutral" name="Neutrales" stackId="tone" fill="#9ca3af" isAnimationActive={false} />
-          <Bar dataKey="negative" name="Negativas" stackId="tone" fill="#e11d48" radius={[3, 3, 0, 0]} isAnimationActive={false} />
+          <Bar dataKey="positive" name="Positivas" stackId="tone" fill={SENTIMENT_COLORS.positive} isAnimationActive={false} />
+          <Bar dataKey="neutral" name="Neutrales" stackId="tone" fill={SENTIMENT_COLORS.neutral} isAnimationActive={false} />
+          <Bar dataKey="negative" name="Negativas" stackId="tone" fill={SENTIMENT_COLORS.negative} radius={[3, 3, 0, 0]} isAnimationActive={false} />
         </BarChart>
       </ResponsiveContainer>
     </div>

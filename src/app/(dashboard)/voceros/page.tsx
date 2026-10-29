@@ -1,8 +1,8 @@
-import Link from 'next/link';
-import { ArrowUpRight, Heart, MessageCircle, Users } from 'lucide-react';
+import { ArrowUpRight, Heart, Megaphone, MessageCircle, UserRound, Users } from 'lucide-react';
 import type { AnalyticsBreakdown, Person } from '@mentio-dev/sdk';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge, Card, EmptyState, LinkButton, PageHeader, buttonClass } from '@/components/ui';
+import { Badge, Card, ChartEmpty, EmptyState, KpiStrip, LinkButton, PageHeader, SectionHeading, Stat } from '@/components/ui';
+import { LinkToggle } from '@/components/ui/client';
 import { compact, platformName } from '@/lib/format';
 import { groupCandidates } from '@/lib/insights';
 import { mentio, unwrap } from '@/lib/mentio';
@@ -57,26 +57,26 @@ function PersonCard({
   const countLabel = sentiment === 'positive' ? 'menciones positivas' : sentiment === 'negative' ? 'menciones negativas' : 'menciones';
 
   return (
-    <article className="rounded-lg border bg-card p-3 shadow-xs">
+    <article className="rounded-lg border bg-card p-3 transition-colors hover:bg-muted/40">
       <div className="flex items-start gap-3">
-        <Avatar size="lg" aria-label={`Avatar de ${name}`}>
+        <Avatar size="lg" aria-hidden="true">
           {avatar ? <AvatarImage src={avatar} alt="" /> : null}
           <AvatarFallback>{initials(name)}</AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold" title={name}>{name}</p>
+          <h3 className="truncate text-sm font-semibold" title={name}>{name}</h3>
           {handle ? <p className="truncate text-xs text-muted-foreground">{handle}</p> : null}
           <div className="mt-2 flex flex-wrap gap-1.5">
             <Badge tone="neutral">{platform}</Badge>
-            <Badge tone={sentiment === 'positive' ? 'good' : sentiment === 'negative' ? 'bad' : 'accent'}>
+            <Badge tone={sentiment === 'positive' ? 'good' : sentiment === 'negative' ? 'bad' : 'accent'} className="tabular-nums">
               <Icon className="mr-1 size-3" aria-hidden="true" />
               {compact(count)} {countLabel}
             </Badge>
-            <Badge tone="neutral">{followers !== null && followers !== undefined ? `${compact(followers)} seguidores` : 'Seguidores sin dato'}</Badge>
+            <Badge tone="neutral" className="tabular-nums">{followers !== null && followers !== undefined ? `${compact(followers)} seguidores` : 'Seguidores sin dato'}</Badge>
           </div>
         </div>
       </div>
-      <LinkButton href={`/people/${row.person.id}`} size="sm" className="mt-3 w-full justify-center">
+      <LinkButton href={`/people/${row.person.id}`} size="sm" className="pressable mt-3 w-full justify-center" aria-label={`Seguir de cerca a ${name}`}>
         Seguir de cerca <ArrowUpRight className="size-3.5" aria-hidden="true" />
       </LinkButton>
     </article>
@@ -86,28 +86,30 @@ function PersonCard({
 function VoiceColumn({
   title,
   description,
+  hint,
+  index,
   rows,
   sentiment,
   details,
 }: {
   title: string;
   description: string;
+  hint: string;
+  index: number;
   rows: VoiceCardRow[];
   sentiment: 'positive' | 'negative' | 'reach';
   details: Map<string, Person | null>;
 }) {
   return (
-    <Card title={title} description={description}>
+    <Card title={title} description={description} hint={hint} index={index}>
       {rows.length ? (
-        <div className="space-y-2.5">
+        <div className="flex flex-col gap-2.5">
           {rows.map((row) => (
             <PersonCard key={row.person.id} row={row} sentiment={sentiment} detail={details.get(row.person.id) ?? null} />
           ))}
         </div>
       ) : (
-        <p className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
-          Aún no hay personas registradas en esta columna. Cuando lleguen más menciones, aparecerán aquí.
-        </p>
+        <ChartEmpty>Aún no hay personas en esta columna. Aparecerán aquí cuando lleguen más menciones.</ChartEmpty>
       )}
     </Card>
   );
@@ -124,7 +126,7 @@ export default async function VocerosPage({ searchParams }: { searchParams: Prom
     return (
       <div>
         <PageHeader title="Voceros y detractores" description="Conoce quién habla bien de tu candidato, quién lo critica y quién alcanza a más personas." />
-        <EmptyState title="Aún no registras tu candidato." action={<LinkButton href="/arranque" variant="primary">Ir al asistente</LinkButton>}>
+        <EmptyState icon={UserRound} title="Aún no registras tu candidato." action={<LinkButton href="/arranque" variant="primary">Ir al asistente</LinkButton>}>
           Agrega el nombre del candidato y sus variantes para identificar las voces que mueven la conversación.
         </EmptyState>
       </div>
@@ -179,54 +181,74 @@ export default async function VocerosPage({ searchParams }: { searchParams: Prom
     }),
   ));
   const candidateHref = (id: string) => `/voceros?candidate=${encodeURIComponent(id)}`;
+  const favorable = allPeople.filter((row) => row.sentiment.positive > row.sentiment.negative).length;
+  const against = allPeople.filter((row) => row.sentiment.negative > row.sentiment.positive).length;
+  const topReach = allPeople.reduce<number | null>((max, row) => {
+    const followers = row.person.followers;
+    return followers === null || followers === undefined ? max : Math.max(max ?? 0, followers);
+  }, null);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <PageHeader
         title="Voceros y detractores"
-        description={`Últimos 30 días · voces que hablan de ${candidate.name} y cuántas personas alcanzan.`}
+        description={`Quién habla bien de ${candidate.name}, quién lo critica y quién alcanza a más personas. Últimos 30 días.`}
         actions={candidates.length > 1 ? (
-          <nav className="flex flex-wrap gap-2" aria-label="Selecciona candidato">
-            {candidates.map((item) => (
-              <Link
-                key={item.mainId}
-                href={candidateHref(item.mainId)}
-                aria-current={item.mainId === candidate.mainId ? 'page' : undefined}
-                className={buttonClass(item.mainId === candidate.mainId ? 'primary' : 'secondary', 'sm')}
-              >
-                {item.name}
-              </Link>
-            ))}
-          </nav>
+          <LinkToggle
+            current={candidate.mainId}
+            items={candidates.map((item) => ({ value: item.mainId, label: item.name, href: candidateHref(item.mainId) }))}
+          />
         ) : null}
       />
 
-      <section className="grid gap-4 @4xl:grid-cols-3" aria-label="Voces sobre el candidato">
-        <VoiceColumn
-          title="Te defienden"
-          description="Personas con más menciones positivas sobre tu candidato."
-          rows={defenders}
-          sentiment="positive"
-          details={details}
+      <KpiStrip label={`Voces sobre ${candidate.name}`}>
+        <Stat label="Personas identificadas" value={compact(allPeople.length)} hint="Mencionaron al candidato" />
+        <Stat label="A favor" value={compact(favorable)} tone={favorable ? 'positive' : 'default'} hint="Más menciones positivas que negativas" />
+        <Stat label="En contra" value={compact(against)} tone={against ? 'negative' : 'default'} hint="Más menciones negativas que positivas" />
+        <Stat label="Mayor alcance" value={topReach === null ? '—' : compact(topReach)} hint="Seguidores de la voz más grande" />
+      </KpiStrip>
+
+      <section className="space-y-4" aria-labelledby="voceros-voces">
+        <SectionHeading
+          id="voceros-voces"
+          icon={Megaphone}
+          title={`Las voces que mueven a ${candidate.name}`}
+          description="Las tres personas más destacadas de cada grupo, con las variantes del candidato sumadas."
+          aside="Últimos 30 días"
         />
-        <VoiceColumn
-          title="Te atacan"
-          description="Personas con más menciones negativas sobre tu candidato."
-          rows={critics}
-          sentiment="negative"
-          details={details}
-        />
-        <VoiceColumn
-          title="Mueven la conversación"
-          description="Personas con mayor número de seguidores entre quienes mencionan a tu candidato."
-          rows={influencers}
-          sentiment="reach"
-          details={details}
-        />
+        <div className="grid gap-4 @4xl:grid-cols-3">
+          <VoiceColumn
+            title="Te defienden"
+            description="Más menciones positivas sobre tu candidato."
+            hint="Personas identificadas por la API con más menciones positivas que negativas, ordenadas por menciones positivas."
+            index={0}
+            rows={defenders}
+            sentiment="positive"
+            details={details}
+          />
+          <VoiceColumn
+            title="Te atacan"
+            description="Más menciones negativas sobre tu candidato."
+            hint="Personas identificadas por la API con más menciones negativas que positivas, ordenadas por menciones negativas."
+            index={1}
+            rows={critics}
+            sentiment="negative"
+            details={details}
+          />
+          <VoiceColumn
+            title="Mueven la conversación"
+            description="Más seguidores entre quienes lo mencionan sin inclinarse."
+            hint="Personas con el mismo número de menciones positivas y negativas, ordenadas por seguidores."
+            index={2}
+            rows={influencers}
+            sentiment="reach"
+            details={details}
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Solo aparecen personas identificadas por la API; las menciones anónimas no cuentan en estas columnas.
+        </p>
       </section>
-      <p className="text-xs text-muted-foreground">
-        Las columnas consideran las variantes del candidato y solo muestran personas identificadas por la API.
-      </p>
     </div>
   );
 }

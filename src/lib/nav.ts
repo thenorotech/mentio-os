@@ -11,7 +11,6 @@ import {
   ListChecks,
   Layers,
   LayoutDashboard,
-  LayoutGrid,
   Map,
   Megaphone,
   type LucideIcon,
@@ -27,49 +26,62 @@ import {
 } from 'lucide-react';
 
 export type NavItem = { href: string; label: string; icon: LucideIcon; children?: NavItem[] };
+export type NavGroup = { label: string; items: NavItem[] };
 
-/** One flat list; an item with children opens a sub-list. */
-export const NAV: NavItem[] = [
-  { href: '/', label: 'Resumen', icon: LayoutDashboard },
-  { href: '/mentions', label: 'Menciones', icon: Radio },
-  { href: '/views', label: 'Vistas', icon: Eye },
-  { href: '/keywords', label: 'Candidatos y temas', icon: Tag },
-  { href: '/analytics', label: 'Análisis', icon: TrendingUp },
+/** The sidebar's sections, in Inerpy's grouped navigation; the breadcrumb reads the group as its parent. */
+export const NAV_GROUPS: NavGroup[] = [
   {
-    href: '/redes',
+    label: 'Campaña',
+    items: [
+      { href: '/', label: 'Resumen', icon: LayoutDashboard },
+      { href: '/mentions', label: 'Menciones', icon: Radio },
+      { href: '/views', label: 'Vistas', icon: Eye },
+      { href: '/keywords', label: 'Candidatos y temas', icon: Tag },
+    ],
+  },
+  {
+    label: 'Inteligencia',
+    items: [
+      { href: '/analytics', label: 'Análisis', icon: TrendingUp },
+      { href: '/contienda', label: 'Cara a cara', icon: Swords },
+      { href: '/temas', label: 'Mapa de temas', icon: Map },
+      { href: '/voceros', label: 'Voceros y detractores', icon: Megaphone },
+      { href: '/reporte', label: 'Reporte ejecutivo', icon: FileText },
+    ],
+  },
+  {
     label: 'Redes y web',
-    icon: Globe2,
-    children: [
-      { href: '/redes', label: 'Panorama', icon: LayoutDashboard },
+    items: [
+      { href: '/redes', label: 'Panorama', icon: Globe2 },
       { href: '/redes/comparativa', label: 'Comparativa', icon: Scale },
       { href: '/redes/recolecciones', label: 'Recolecciones', icon: ListChecks },
     ],
   },
-  { href: '/contienda', label: 'Cara a cara', icon: Swords },
-  { href: '/temas', label: 'Mapa de temas', icon: Map },
-  { href: '/voceros', label: 'Voceros y detractores', icon: Megaphone },
-  { href: '/reporte', label: 'Reporte ejecutivo', icon: FileText },
-  { href: '/arranque', label: 'Asistente de arranque', icon: Sparkles },
   {
-    href: '/people',
     label: 'Audiencia',
-    icon: UsersRound,
-    children: [
-      { href: '/people', label: 'Personas', icon: LayoutGrid },
+    items: [
+      { href: '/people', label: 'Personas', icon: UsersRound },
       { href: '/segments', label: 'Segmentos', icon: Layers },
     ],
   },
   {
-    href: '/alerts',
-    label: 'Alertas',
-    icon: Bell,
-    children: [
-      { href: '/alerts', label: 'Reglas', icon: Bell },
+    label: 'Avisos',
+    items: [
+      { href: '/alerts', label: 'Alertas', icon: Bell },
       { href: '/channels', label: 'Canales', icon: Webhook },
     ],
   },
-  { href: '/settings/company', label: 'Ajustes', icon: Settings },
+  {
+    label: 'Configuración',
+    items: [
+      { href: '/arranque', label: 'Asistente de arranque', icon: Sparkles },
+      { href: '/settings/company', label: 'Ajustes', icon: Settings },
+    ],
+  },
 ];
+
+/** Every page in one flat list (⌘K, the breadcrumb). */
+export const NAV: NavItem[] = NAV_GROUPS.flatMap((group) => group.items);
 
 /** The settings pages, for the breadcrumb above them. */
 export const SETTINGS: NavItem[] = [

@@ -1,7 +1,8 @@
 import Link from 'next/link';
-import { ChartNoAxesCombined, CircleHelp } from 'lucide-react';
+import { ChevronRight, CircleHelp, Map as MapIcon, Scale } from 'lucide-react';
 import { ThemeBubbleChart, type ThemeBubble } from '@/components/contest/theme-bubble-chart';
-import { Card, EmptyState, LinkButton, PageHeader } from '@/components/ui';
+import { Card, ChartEmpty, EmptyState, KpiStrip, LinkButton, PageHeader, SectionHeading, Stat, TONE_TEXT, cx } from '@/components/ui';
+import { SENTIMENT_COLORS } from '@/lib/chart-colors';
 import { compact } from '@/lib/format';
 import { groupCandidates, sentimentScore } from '@/lib/insights';
 import { mentio, unwrap } from '@/lib/mentio';
@@ -17,39 +18,49 @@ function toneLabel(score: number | null) {
   return 'El tono está parejo';
 }
 
-function TopicList({ title, topics, tone }: {
+const TONE_LEGEND = [
+  { key: 'negative', label: 'Se habla mal' },
+  { key: 'neutral', label: 'Tono parejo o sin datos' },
+  { key: 'positive', label: 'Se habla bien' },
+] as const;
+
+function TopicList({ title, topics, tone, index }: {
   title: string;
   topics: ThemeBubble[];
   tone: 'good' | 'bad';
+  index: number;
 }) {
   return (
-    <Card title={title} description={tone === 'good'
-      ? 'Temas con más menciones positivas que negativas.'
-      : 'Temas con más menciones negativas que positivas.'}
+    <Card
+      index={index}
+      title={title}
+      hint="Temas cuyo índice de tono (positivas menos negativas, entre las menciones con tono) pasa de ±0.15 en los últimos 30 días. Se muestran los cinco más marcados."
+      description={tone === 'good'
+        ? 'Temas con más menciones positivas que negativas.'
+        : 'Temas con más menciones negativas que positivas.'}
     >
       {topics.length ? (
-        <ul className="divide-y">
+        <ul className="-mx-2 divide-y">
           {topics.slice(0, 5).map((topic) => (
             <li key={topic.id}>
               <Link
                 href={topic.href}
-                className="flex flex-wrap items-center justify-between gap-2 py-2.5 first:pt-0 last:pb-0 hover:text-primary"
+                className="group flex items-center justify-between gap-3 rounded-md px-2 py-2.5 transition-colors hover:bg-muted/40 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
               >
                 <span className="min-w-0">
-                  <span className="block truncate font-medium">{topic.name}</span>
-                  <span className="text-xs text-muted-foreground">{toneLabel(topic.sentimentScore)}</span>
+                  <span className="block truncate text-sm font-medium">{topic.name}</span>
+                  <span className={cx('text-xs', TONE_TEXT[tone === 'good' ? 'positive' : 'negative'])}>{toneLabel(topic.sentimentScore)}</span>
                 </span>
-                <span className="whitespace-nowrap text-xs tabular-nums text-muted-foreground">
+                <span className="flex shrink-0 items-center gap-1 text-xs whitespace-nowrap text-muted-foreground tabular-nums">
                   {compact(topic.matched)} menciones
+                  <ChevronRight aria-hidden="true" className="size-3.5 transition-transform motion-safe:group-hover:translate-x-0.5" />
                 </span>
               </Link>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-muted-foreground">
-          Todavía no hay temas con este tono en el periodo.
-        </p>
+        <ChartEmpty>Todavía no hay temas con este tono en el periodo.</ChartEmpty>
       )}
     </Card>
   );
@@ -113,37 +124,67 @@ export default async function TemasPage() {
     .filter((topic) => topic.sentimentScore !== null && topic.sentimentScore <= -0.15)
     .sort((a, b) => (a.sentimentScore ?? 0) - (b.sentimentScore ?? 0));
 
+  const totalMentions = bubbles.reduce((total, topic) => total + topic.matched, 0);
+  const leader = bubbles.find((topic) => topic.matched > 0);
+  const withoutTone = bubbles.filter((topic) => topic.sentimentScore === null).length;
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <PageHeader
         title="Mapa de temas"
-        description="Cada burbuja representa un tema. Su tamaño indica cuánto se habla y su altura muestra el tono de la conversación."
+        description="Qué temas de agenda ayudan a tu candidato y en cuáles necesita responder. Últimos 30 días."
       />
 
-      <Card
-        title="Conversación por tema"
-        description="Últimos 30 días. Compara cuánto se habla de cada tema con el tono de la conversación. Selecciona una burbuja para abrir esas menciones."
-      >
-        <ThemeBubbleChart topics={bubbles} />
-        <p className="mt-2 text-xs text-muted-foreground">
-          Los temas con valores muy parecidos se separan un poco para que puedas distinguirlos; el detalle muestra el número real de menciones.
-        </p>
-        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground" aria-label="Colores de tono">
-          <span className="inline-flex items-center gap-1.5"><span className="size-2 rounded-full bg-red-500" /> Se habla mal</span>
-          <span className="inline-flex items-center gap-1.5"><span className="size-2 rounded-full bg-zinc-400" /> Tono parejo o sin datos</span>
-          <span className="inline-flex items-center gap-1.5"><span className="size-2 rounded-full bg-emerald-500" /> Se habla bien</span>
-        </div>
-      </Card>
+      <KpiStrip label="Indicadores de temas">
+        <Stat label="Temas registrados" value={compact(bubbles.length)} hint={withoutTone ? `${compact(withoutTone)} aún sin tono` : 'Todos con tono'} />
+        <Stat label="Menciones" value={compact(totalMentions)} hint="Suma de todos los temas" />
+        <Stat label="Te ayudan" value={compact(helped.length)} tone={helped.length ? 'positive' : 'default'} hint="Temas con tono positivo" />
+        <Stat label="Te hunden" value={compact(hurt.length)} tone={hurt.length ? 'negative' : 'default'} hint="Temas con tono negativo" />
+        <Stat label="Más mencionado" value={leader?.name ?? '—'} hint={leader ? `${compact(leader.matched)} menciones` : 'Sin menciones'} href={leader?.href} />
+      </KpiStrip>
 
-      <section className="grid gap-4 @4xl:grid-cols-2" aria-label="Temas que ayudan o preocupan">
-        <TopicList title="Temas que te ayudan" topics={helped} tone="good" />
-        <TopicList title="Temas que te hunden" topics={hurt} tone="bad" />
+      <section className="space-y-4" aria-labelledby="temas-mapa">
+        <SectionHeading
+          id="temas-mapa"
+          icon={MapIcon}
+          title="Conversación por tema"
+          description="Cada burbuja es un tema: su tamaño y posición horizontal indican cuánto se habla, su altura el tono."
+          aside="Últimos 30 días"
+        />
+        <Card
+          index={0}
+          title="Volumen y tono"
+          hint="Volumen = menciones del tema y sus variantes. Tono = (positivas − negativas) ÷ menciones con tono, de −1 a +1. Los temas con valores muy parecidos se separan un poco para distinguirlos; el detalle muestra el número real."
+          description="Selecciona una burbuja para abrir esas menciones."
+          actions={(
+            <ul className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground" aria-label="Colores de tono">
+              {TONE_LEGEND.map((item) => (
+                <li key={item.key} className="inline-flex items-center gap-1.5">
+                  <span aria-hidden="true" className="size-2 rounded-full" style={{ backgroundColor: SENTIMENT_COLORS[item.key] }} />
+                  {item.label}
+                </li>
+              ))}
+            </ul>
+          )}
+        >
+          {totalMentions > 0
+            ? <ThemeBubbleChart topics={bubbles} />
+            : <ChartEmpty>Aún no hay menciones de tus temas en los últimos 30 días.</ChartEmpty>}
+        </Card>
       </section>
 
-      <p className="flex items-start gap-2 text-xs text-muted-foreground">
-        <ChartNoAxesCombined className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-        El tono se calcula con las menciones positivas, neutrales y negativas del tema; los puntos grises todavía no tienen datos suficientes.
-      </p>
+      <section className="space-y-4" aria-labelledby="temas-balance">
+        <SectionHeading
+          id="temas-balance"
+          icon={Scale}
+          title="Temas que ayudan o preocupan"
+          description="El tono se calcula con las menciones positivas, neutrales y negativas del tema; los puntos grises aún no tienen datos suficientes."
+        />
+        <div className="grid gap-4 @4xl:grid-cols-2">
+          <TopicList title="Temas que te ayudan" topics={helped} tone="good" index={1} />
+          <TopicList title="Temas que te hunden" topics={hurt} tone="bad" index={2} />
+        </div>
+      </section>
     </div>
   );
 }

@@ -22,15 +22,18 @@ A dashboard over the public Mentio API (https://docs.mentio.dev). There is no da
 
 ## UI
 
+- **Design system: `DESIGN.md`** (Inerpy's, adapted). Read it before touching UI; it wins over taste.
+- Shell: inset sidebar (collapses to icons, `sidebar_state` cookie), rounded canvas, `SiteHeader` (breadcrumb from `NAV_GROUPS`, ⌘K, theme) and `ShellContent`, the only scroll surface (`src/components/shell/`). Add a page to a group in `src/lib/nav.ts` and the sidebar, breadcrumb and ⌘K list it.
 - Components are shadcn/ui (`components.json`, style base-nova, Base UI primitives) in `src/components/ui/*.tsx`. Add with `npx shadcn add <name>`; never hand-roll a control shadcn has.
 - Pages use the kit in `src/components/ui/index.tsx` (server) and `client.tsx` (ActionForm, SubmitButton with a confirm dialog, DrawerButton, Tabs). Overlays are side drawers (Sheet), not modals.
 - A 'use client' module only exports components to the server, so class helpers live in plain files (`button-variants.ts`).
 - List filters are `UrlFilters` (`src/components/url-filters.tsx`) with a `FilterDef[]`; changes write the URL under the API's parameter names, and the server page parses them. Do not add Apply buttons or rows of selects.
 - Colors are theme tokens (`primary`, `muted-foreground`, `border`, ...); `primary` is the brand color from `brand.config.ts`.
 - Opening something is a drawer: `app/@drawer/(.)<route>/page.tsx` intercepts a soft navigation to a detail or "new" page and renders that same page in `RouteDrawer`; a pasted link still opens the full page. A new detail page gets its own intercepting route.
-- Creating something is a primary button at the top right of the page (PageHeader `actions`), opening a drawer (`DrawerButton`) or a "new" page (which the drawer intercepts). Never a form at the bottom of a list.
+- Creating something is the screen's one primary button at the top right: `PageHeader` `actions` on a non-table page, `DataView` `actions` (the toolbar's right) on a list. It opens a drawer (`DrawerButton`) or a "new" page (which the drawer intercepts). Never a form at the bottom of a list.
 - Settings pages are a narrow column (`max-w-3xl`) of `FormCard`s, each its own form with Save in the footer; their actions send only the fields present.
-- Lists are tables (`Table` with `TableRow`/`TableCell`); a filter in a row is `Conditions` (two badges and "+N more"), never the whole list.
+- Lists are table views: `DataView` (sr-only h1, `UrlFilters` as `toolbar`, CTAs as `actions`, the description as a one-line `notice`) around `Table` (`TableRow`/`TableCell`, cells `td`) and `OffsetPager`, with a `ListSkeleton` `loading.tsx`. A filter in a row is `Conditions` (two badges and "+N more"), never the whole list.
+- Dashboards: `KpiStrip` of `Stat` tiles (never a row of cards), `SectionHeading` per block, `Card` with `hint` and `index` for charts, `ChartEmpty` when there is nothing to draw. Colors: tones from `TONE_TEXT`, series from `CHART_COLORS` / `SENTIMENT_COLORS`, never hex in a page.
 - Drawers follow Dub's sheet: a floating panel inset 8px, rounded, a sticky header bar and a sticky footer (`data-slot="form-actions"` on a form's Save row). A page opened in a drawer reads as one column because pages lay out by container queries (`@lg:`, `@4xl:`), never viewport breakpoints, and cards turn into sections there (globals.css, `[data-drawer]`).
 - Form controls: `PlatformPicker` (logo pills), `Segmented` (one of a few, with the chosen option's description), `TokenInput` (term lists), `SwitchRow` (a yes/no setting), all submitting through hidden inputs.
 - Feedback: a write's result is a Sonner toast (`ActionForm`/`FormCard` do it); a page has a `loading.tsx` skeleton; a drawer form marks itself clean on save (`DrawerSavedContext`) and otherwise asks before discarding (`useDiscardGuard`).

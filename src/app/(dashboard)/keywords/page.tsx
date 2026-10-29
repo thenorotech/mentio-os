@@ -1,7 +1,7 @@
 import type { ListKeywordsData } from '@mentio-dev/sdk';
 import { Tag, Plus } from 'lucide-react';
 import Link from 'next/link';
-import { Badge, EmptyState, LinkButton, OffsetPager, PageHeader, Table, td, TableCell, TableRow, rowLink } from '@/components/ui';
+import { Badge, DataView, EmptyState, LinkButton, OffsetPager, Table, td, TableCell, TableRow, rowLink } from '@/components/ui';
 import { InfoTip } from '@/components/info-tip';
 import { UrlFilters } from '@/components/url-filters';
 import { isOneOf } from '@/lib/form';
@@ -46,14 +46,12 @@ export default async function Keywords({ searchParams }: { searchParams: Promise
   const filtered = Boolean(q || groupIds.length || kinds.length || statuses.length || platforms.length);
 
   return (
-    <div>
-      <PageHeader
-        title={<span className="inline-flex items-center gap-1">Candidatos y temas <InfoTip text="Monitorea a la persona de tu campaña, a sus adversarios y los asuntos de agenda que siguen." /></span>}
-        description="Monitorea a tus candidatos, adversarios y temas de agenda en las plataformas seleccionadas. Cada término nuevo recupera 30 días de conversación."
-        actions={<LinkButton href="/keywords/new" variant="primary" create><Plus /> Agregar candidato o tema</LinkButton>}
-      />
-
-      <UrlFilters
+    <DataView
+      title="Candidatos y temas"
+      actions={<LinkButton href="/keywords/new" variant="primary" create><Plus /> Agregar candidato o tema</LinkButton>}
+      notice={<span>Candidatos, adversarios y temas de agenda que sigue la campaña. Cada término nuevo recupera 30 días de conversación.</span>}
+      toolbar={<UrlFilters
+        className="grid gap-2"
         search={{ placeholder: 'Buscar candidato, tema o contexto' }}
         sort={{ options: SORTS.map(([value, label]) => ({ value, label })) }}
         filters={[
@@ -62,8 +60,8 @@ export default async function Keywords({ searchParams }: { searchParams: Promise
           { param: 'status', label: 'Estado', icon: 'status', kind: 'multi', options: STATUSES.map(([value, label]) => ({ value, label })) },
           { param: 'platform', label: 'Plataforma', icon: 'platform', kind: 'multi', options: Object.entries(PLATFORM_NAMES).map(([value, label]) => ({ value, label, platform: value })) },
         ]}
-        actions={<span className="ml-2 text-xs text-muted-foreground">{page.total} {page.total === 1 ? 'término monitoreado' : 'términos monitoreados'}</span>}
-      />
+      />}
+    >
 
       {page.data.length === 0 ? (
         <EmptyState
@@ -92,7 +90,7 @@ export default async function Keywords({ searchParams }: { searchParams: Promise
                 {showGroups && !keyword.group.isDefault ? <span className="ml-2 text-xs text-muted-foreground">en {keyword.group.name}</span> : null}
                 <div className="mt-1"><KeywordBadges keyword={keyword} /></div>
                 {keyword.stats.noise.noisy ? (
-                  <p className="mt-1 max-w-xs text-xs text-red-600">
+                  <p className="mt-1 max-w-xs text-xs text-rose-600 dark:text-rose-400">
                     Pocas menciones recientes parecen hablar de este término: {keyword.stats.noise.relevant} de {keyword.stats.noise.scored}. <InfoTip term="relevancia" /> Ajusta los términos requeridos o excluidos.
                   </p>
                 ) : null}
@@ -116,6 +114,6 @@ export default async function Keywords({ searchParams }: { searchParams: Promise
       )}
 
       <OffsetPager total={page.total} limit={LIMIT} offset={offset} href={(o) => withParams('/keywords', params, { offset: o ? String(o) : undefined })} />
-    </div>
+    </DataView>
   );
 }
