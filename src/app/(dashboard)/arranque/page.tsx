@@ -27,8 +27,8 @@ export default async function Arranque({ searchParams }: { searchParams: Promise
               Tu tablero está listo
             </span>
           )}
-          description="Ya puedes empezar a revisar lo que se dice de tu candidatura."
-          actions={<LinkButton href="/" variant="primary">Ir al tablero <ArrowRight aria-hidden /></LinkButton>}
+          description="Mentio ya escucha tus frases. La guía te lleva a los perfiles, eventos y alertas."
+          actions={<LinkButton href="/guia" variant="primary">Continuar la guía <ArrowRight aria-hidden /></LinkButton>}
         />
         <section aria-labelledby="next-steps-heading" className="grid gap-3">
           <SectionHeading id="next-steps-heading" icon={ListChecks} title="Siguientes pasos" description="Tres cosas que conviene dejar listas hoy." />

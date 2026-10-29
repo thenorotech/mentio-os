@@ -5,7 +5,7 @@ import { BrandInsightCard } from '@/components/home/brand-insight-card';
 import { CrisisBanner } from '@/components/home/crisis-banner';
 import { ConversationChart, DailyToneChart, PlatformDonut, type ConversationSeries, type DailyPoint, type PlatformDatum } from '@/components/home/home-charts';
 import { HomeKpi, type KpiChange } from '@/components/home/home-kpi';
-import { NoBrandCard } from '@/components/home/no-brand-card';
+import { HomeSetup } from '@/components/home/home-setup';
 import { QuickLinks } from '@/components/home/quick-links';
 import { RecentMentions } from '@/components/home/recent-mentions';
 import { SocialPulseCard, SocialPulseSkeleton, loadSocialPulse } from '@/components/home/social-pulse-card';
@@ -88,7 +88,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
           description="Configura tu campaña para empezar a escuchar lo que se dice de tus candidatos."
           actions={greetingActions(range, params)}
         />
-        <NoBrandCard />
+        <HomeSetup full />
       </div>
     );
   }
@@ -197,6 +197,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
         description={<span><strong className="font-semibold text-foreground">{campaignName}</strong><span className="mx-1.5 text-muted-foreground">·</span>{periodLabel}</span>}
         actions={greetingActions(range, params)}
       />
+
+      <Suspense fallback={null}>
+        <HomeSetup />
+      </Suspense>
 
       {light.isCrisis ? <CrisisBanner candidateName={candidate.name} negativeMentions={summary.sentiment.negative} growth={Number.isFinite(crisisGrowth) ? crisisGrowth : null} href={crisisHref} /> : null}
 
