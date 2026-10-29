@@ -5,8 +5,9 @@ import { CommandMenu } from '@/components/command-menu';
 import { ShellContent } from '@/components/shell/shell-content';
 import { SiteHeader } from '@/components/shell/site-header';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
+import { currentAccount } from '@/auth';
+import { accountsEnabled } from '@/lib/accounts';
 import { mentio } from '@/lib/mentio';
-import { passwordProtected } from '@/lib/session';
 
 // Every page reads the workspace live, the sidebar included.
 export const dynamic = 'force-dynamic';
@@ -26,11 +27,11 @@ async function workspace(): Promise<Workspace> {
  * drawer a list opened over it (@drawer).
  */
 export default async function DashboardLayout({ children, drawer }: { children: ReactNode; drawer: ReactNode }) {
-  const [ws, jar] = await Promise.all([workspace(), cookies()]);
+  const [ws, jar, account] = await Promise.all([workspace(), cookies(), accountsEnabled() ? currentAccount() : null]);
   const defaultOpen = jar.get('sidebar_state')?.value !== 'false';
   return (
     <SidebarProvider defaultOpen={defaultOpen} className="agora-shell" style={SHELL_STYLE}>
-      <AppSidebar workspace={ws} canSignOut={passwordProtected()} />
+      <AppSidebar workspace={ws} account={account} />
       <SidebarInset className="h-dvh min-w-0 overflow-hidden md:peer-data-[variant=inset]:h-[calc(100svh-1rem)] md:peer-data-[variant=inset]:border md:peer-data-[variant=inset]:border-border/60 md:peer-data-[variant=inset]:shadow-md">
         <SiteHeader />
         <ShellContent>{children}</ShellContent>

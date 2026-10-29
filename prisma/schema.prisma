@@ -1,0 +1,24 @@
+// The app's own data. Everything else (keywords, channels, alerts, settings)
+// lives in each account's Mentio workspace and is read through the API.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// One dashboard login, bound to one Mentio workspace by its API key.
+model Account {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  /// scrypt:<salt hex>:<hash hex>
+  passwordHash String
+  /// The Mentio API key, AES-256-GCM sealed with a key derived from AUTH_SECRET.
+  apiKey       String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

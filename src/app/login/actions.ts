@@ -1,9 +1,10 @@
 'use server';
 
-import { cookies } from 'next/headers';
+import { AuthError } from 'next-auth';
 import { redirect } from 'next/navigation';
+import { signIn as authSignIn, signOut as authSignOut } from '@/auth';
 import type { ActionState } from '@/lib/action';
-import { SESSION_COOKIE, SESSION_MAX_AGE, passwordProtected, sameDigest, sessionToken } from '@/lib/session';
+import { accountsEnabled } from '@/lib/accounts';
 
 /** Only a path on this site, so the login can never redirect elsewhere. */
 const safeNext = (value: FormDataEntryValue | null) => {
@@ -12,15 +13,22 @@ const safeNext = (value: FormDataEntryValue | null) => {
 };
 
 export async function signIn(_state: ActionState, form: FormData): Promise<ActionState> {
-  if (!passwordProtected()) redirect('/');
-  const given = await sessionToken(String(form.get('password') ?? ''));
-  const expected = await sessionToken();
-  if (!sameDigest(given, expected)) return { error: 'La contraseña no es correcta.', at: Date.now() };
-  (await cookies()).set(SESSION_COOKIE, expected, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/', maxAge: SESSION_MAX_AGE });
-  redirect(safeNext(form.get('next')));
+  if (!accountsEnabled()) redirect('/');
+  try {
+    await authSignIn('credentials', {
+      email: String(form.get('email') ?? ''),
+      password: String(form.get('password') ?? ''),
+      redirectTo: safeNext(form.get('next')),
+    });
+  } catch (error) {
+    // A success is a redirect, thrown too: only Auth.js's own errors stop here.
+    if (error instanceof AuthError) return { error: 'El correo o la contraseña no son correctos.', at: Date.now() };
+    throw error;
+  }
+  return { at: Date.now() };
 }
 
+/** Signs out; switching account is signing out and in with another one. */
 export async function signOut() {
-  (await cookies()).delete(SESSION_COOKIE);
-  redirect('/login');
+  await authSignOut({ redirectTo: '/login' });
 }
