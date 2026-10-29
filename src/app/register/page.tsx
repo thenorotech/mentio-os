@@ -12,7 +12,7 @@ export const metadata = { title: 'Crear cuenta' };
 // Reads DATABASE_URL per request, never at build time.
 export const dynamic = 'force-dynamic';
 
-/** Sign-up: an account and the Mentio key of the workspace it opens. */
+/** Sign-up: an email and password for the dashboard. */
 export default function Register() {
   if (!accountsEnabled()) redirect('/');
   return (
@@ -21,7 +21,7 @@ export default function Register() {
         <CardHeader className="items-center text-center">
           <BrandMark className="mx-auto mb-2 size-9 text-base" />
           <CardTitle className="text-lg">Crear cuenta en {brand.name}</CardTitle>
-          <CardDescription>Tu cuenta abre el espacio de trabajo de tu clave de Mentio, con su propia configuración.</CardDescription>
+          <CardDescription>Crea tu acceso al panel.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <ActionForm action={register} className="grid gap-4">
@@ -33,9 +33,6 @@ export default function Register() {
             </Field>
             <Field label="Contraseña" hint="Al menos 8 caracteres.">
               <Input type="password" name="password" required minLength={8} autoComplete="new-password" />
-            </Field>
-            <Field label="Clave de API de Mentio" hint="En Mentio: Ajustes, Claves de API. Se guarda cifrada.">
-              <Input type="password" name="apiKey" required autoComplete="off" placeholder="mk_live_..." />
             </Field>
             <SubmitButton>Crear cuenta</SubmitButton>
           </ActionForm>

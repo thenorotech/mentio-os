@@ -1,8 +1,8 @@
 /**
  * Sign-in (Auth.js v5): email and password against the Account table
  * (src/lib/accounts.ts). The session is a signed, encrypted JWT cookie that
- * carries only the account id; the API key is looked up on the server on
- * every request, so deleting an account signs it out.
+ * carries only the account id, checked against the database on every
+ * request, so deleting an account signs it out.
  */
 import NextAuth, { type DefaultSession } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
@@ -38,7 +38,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
 });
 
-/** The signed-in account, without its key or hash; null when signed out or removed. */
+/** The signed-in account, without its hash; null when signed out or removed. */
 export async function currentAccount(): Promise<AccountProfile | null> {
   return accountById((await auth())?.user?.id);
 }

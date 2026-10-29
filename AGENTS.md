@@ -10,9 +10,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # Ágora
 
-A dashboard over the public Mentio API (https://docs.mentio.dev). Every workspace read and write is a call through `@mentio-dev/sdk`; the only database (Postgres, Prisma, `prisma/schema.prisma`) holds the dashboard's accounts, each bound to one workspace by its API key.
+A dashboard over the public Mentio API (https://docs.mentio.dev). Every workspace read and write is a call through `@mentio-dev/sdk`; the only database (Postgres, Prisma, `prisma/schema.prisma`) holds the dashboard's logins, all on the one workspace of `MENTIO_API_KEY`.
 
-- **The API key stays on the server.** Only `src/lib/mentio.ts` resolves it: the signed-in account's key (`src/lib/accounts.ts`, sealed in the database) when `DATABASE_URL` is set, `MENTIO_API_KEY` otherwise. Import `mentio()` from server components, server actions (`'use server'`) and route handlers only, never from a `'use client'` file.
+- **The API key stays on the server.** Only `src/lib/mentio.ts` reads `MENTIO_API_KEY`, and with `DATABASE_URL` set only for a signed-in account. Users never enter a key. Import `mentio()` from server components, server actions (`'use server'`) and route handlers only, never from a `'use client'` file.
 - **Reads**: `unwrap(await mentio().operationId({ path, query }))`. Pages are async server components with `export const dynamic = 'force-dynamic'`; `params` and `searchParams` are Promises. Filters live in the URL.
 - **Writes**: a server action `(state: ActionState, form: FormData) => Promise<ActionState>` returning `run(async () => { ...; revalidatePath(...); return 'Saved'; })` from `src/lib/action.ts`, rendered with `<ActionForm>` and `<SubmitButton>` from `src/components/ui/client.tsx`, so errors show next to the button. PATCH bodies are partial; `null` clears.
 - **UI**: compose `src/components/ui` (cards, tables, badges, forms, charts); brand values come from `src/brand.config.ts`; the sidebar is `src/lib/nav.ts`.
