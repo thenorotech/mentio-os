@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { brand } from '@/brand.config';
 import { BrandMark } from '@/components/app-sidebar';
@@ -9,10 +10,10 @@ import { one, type SearchParams } from '@/lib/params';
 import { signIn } from './actions';
 
 export const metadata = { title: 'Entrar' };
-// Reads AUTH_ACCOUNTS per request, never at build time.
+// Reads DATABASE_URL per request, never at build time.
 export const dynamic = 'force-dynamic';
 
-/** The sign-in page, when AUTH_ACCOUNTS is set. Each account opens its own workspace. */
+/** The sign-in page, when DATABASE_URL is set. Each account opens its own workspace. */
 export default async function Login({ searchParams }: { searchParams: Promise<SearchParams> }) {
   if (!accountsEnabled()) redirect('/');
   const next = one(await searchParams, 'next') ?? '/';
@@ -24,7 +25,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<Se
           <CardTitle className="text-lg">Entrar a {brand.name}</CardTitle>
           <CardDescription>Entra con tu cuenta para ver tu espacio de trabajo.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="grid gap-4">
           <ActionForm action={signIn} className="grid gap-4">
             <input type="hidden" name="next" value={next} />
             <Field label="Correo">
@@ -35,6 +36,12 @@ export default async function Login({ searchParams }: { searchParams: Promise<Se
             </Field>
             <SubmitButton>Entrar</SubmitButton>
           </ActionForm>
+          <p className="text-center text-sm text-muted-foreground">
+            ¿No tienes cuenta?{' '}
+            <Link href="/register" className="font-medium text-foreground underline-offset-4 hover:underline">
+              Crear cuenta
+            </Link>
+          </p>
         </CardContent>
       </Card>
     </main>

@@ -10,9 +10,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # Ágora
 
-A dashboard over the public Mentio API (https://docs.mentio.dev). There is no database: every read and write is a call through `@mentio-dev/sdk`.
+A dashboard over the public Mentio API (https://docs.mentio.dev). Every workspace read and write is a call through `@mentio-dev/sdk`; the only database (Postgres, Prisma, `prisma/schema.prisma`) holds the dashboard's accounts, each bound to one workspace by its API key.
 
-- **The API key stays on the server.** Only `src/lib/mentio.ts` reads `MENTIO_API_KEY`. Import `mentio()` from server components, server actions (`'use server'`) and route handlers only, never from a `'use client'` file.
+- **The API key stays on the server.** Only `src/lib/mentio.ts` resolves it: the signed-in account's key (`src/lib/accounts.ts`, sealed in the database) when `DATABASE_URL` is set, `MENTIO_API_KEY` otherwise. Import `mentio()` from server components, server actions (`'use server'`) and route handlers only, never from a `'use client'` file.
 - **Reads**: `unwrap(await mentio().operationId({ path, query }))`. Pages are async server components with `export const dynamic = 'force-dynamic'`; `params` and `searchParams` are Promises. Filters live in the URL.
 - **Writes**: a server action `(state: ActionState, form: FormData) => Promise<ActionState>` returning `run(async () => { ...; revalidatePath(...); return 'Saved'; })` from `src/lib/action.ts`, rendered with `<ActionForm>` and `<SubmitButton>` from `src/components/ui/client.tsx`, so errors show next to the button. PATCH bodies are partial; `null` clears.
 - **UI**: compose `src/components/ui` (cards, tables, badges, forms, charts); brand values come from `src/brand.config.ts`; the sidebar is `src/lib/nav.ts`.
@@ -34,4 +34,5 @@ A dashboard over the public Mentio API (https://docs.mentio.dev). There is no da
 - Form controls: `PlatformPicker` (logo pills), `Segmented` (one of a few, with the chosen option's description), `TokenInput` (term lists), `SwitchRow` (a yes/no setting), all submitting through hidden inputs.
 - Feedback: a write's result is a Sonner toast (`ActionForm`/`FormCard` do it); a page has a `loading.tsx` skeleton; a drawer form marks itself clean on save (`DrawerSavedContext`) and otherwise asks before discarding (`useDiscardGuard`).
 - Shortcuts: ⌘K is `CommandMenu` (add a page to `NAV` and it is listed); `/` focuses the `input[data-search]` of the page; `C` presses the element with `data-create` (pass `create` to `LinkButton` or `DrawerButton`).
-- Auth: `src/proxy.ts` + `src/lib/session.ts` (DASHBOARD_PASSWORD). The dashboard lives in the `(dashboard)` route group; `/login` sits outside it.
+- Auth: Auth.js v5 (`src/auth.ts`, credentials against the `Account` table) gated in `src/proxy.ts`; on with `DATABASE_URL`, off without it. The dashboard lives in the `(dashboard)` route group; `/login` and `/register` sit outside it.
+- Database: `npm run build` runs `prisma generate && prisma db push`; CI runs `npm run build:check` (no database).

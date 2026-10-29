@@ -1,7 +1,7 @@
 /**
  * The API client, server side only. The API key is resolved here and
  * nowhere else: the signed-in account's key (src/lib/accounts.ts) when
- * AUTH_ACCOUNTS is set, MENTIO_API_KEY otherwise. It is looked up on every
+ * DATABASE_URL is set, MENTIO_API_KEY otherwise. It is looked up on every
  * request, so one client serves every account. Pages and server actions
  * import `mentio()`, and nothing that imports this file can be bundled for
  * the browser (the `typeof window` check fails loudly if it ever is).
@@ -9,7 +9,7 @@
 import { createMentio } from '@mentio-dev/sdk';
 import { auth } from '@/auth';
 import { apiErrorMessage } from '@/lib/action';
-import { accountById, accountsEnabled } from '@/lib/accounts';
+import { accountsEnabled, apiKeyFor } from '@/lib/accounts';
 
 if (typeof window !== 'undefined') {
   throw new Error('Este módulo solo se ejecuta en el servidor: la clave de API nunca debe llegar al navegador.');
@@ -17,9 +17,9 @@ if (typeof window !== 'undefined') {
 
 async function apiKey(): Promise<string> {
   if (accountsEnabled()) {
-    const account = accountById((await auth())?.user?.id);
-    if (!account) throw new Error('Tu sesión terminó. Vuelve a entrar.');
-    return account.apiKey;
+    const key = await apiKeyFor((await auth())?.user?.id);
+    if (!key) throw new Error('Tu sesión terminó. Vuelve a entrar.');
+    return key;
   }
   const key = process.env.MENTIO_API_KEY;
   if (!key) {
@@ -54,4 +54,11 @@ export function unwrap<T>(result: { data?: T; error?: unknown; response?: Respon
     throw error;
   }
   return result.data;
+}
+
+/** The workspace name a key opens, or null when the API refuses the key. */
+export async function workspaceForKey(key: string): Promise<string | null> {
+  const probe = createMentio({ apiKey: key, ...(process.env.MENTIO_API_URL ? { baseUrl: process.env.MENTIO_API_URL } : {}) });
+  const result = await probe.whoami().catch(() => null);
+  return result?.data?.workspace.name ?? null;
 }

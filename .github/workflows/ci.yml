@@ -23,7 +23,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
-      - run: npm run build
+      # build runs `prisma db push`, which needs a database; CI checks the build without one.
+      - run: npm run build:check
       - name: Smoke test on demo data
         env:
           MENTIO_API_KEY: mk_demo

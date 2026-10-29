@@ -1,7 +1,7 @@
 /**
- * The sign-in gate (src/auth.ts): with AUTH_ACCOUNTS set, every page, server
+ * The sign-in gate (src/auth.ts): with DATABASE_URL set, every page, server
  * action and export needs a session; without one a request goes to /login
- * and comes back where it started. Without AUTH_ACCOUNTS the app is open.
+ * and comes back where it started. Without DATABASE_URL the app is open.
  */
 import { NextResponse, type NextFetchEvent, type NextRequest } from 'next/server';
 import { auth } from '@/auth';
@@ -20,6 +20,6 @@ export function proxy(request: NextRequest, event: NextFetchEvent) {
 }
 
 export const config = {
-  // Everything but the login page, Auth.js's own routes and Next's static files.
-  matcher: ['/((?!login|api/auth|_next/static|_next/image|favicon.ico|.*\\.(?:png|svg|jpg|ico|webp)$).*)'],
+  // Everything but the login and register pages, Auth.js's own routes and Next's static files.
+  matcher: ['/((?!login|register|api/auth|_next/static|_next/image|favicon.ico|.*\\.(?:png|svg|jpg|ico|webp)$).*)'],
 };
