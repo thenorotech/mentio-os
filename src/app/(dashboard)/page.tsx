@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import type { AnalyticsSeries, Mention } from '@mentio-dev/sdk';
 import { Activity, CalendarDays, ChartNoAxesCombined, Hash, MessageSquareText, Radio } from 'lucide-react';
 import { BrandInsightCard } from '@/components/home/brand-insight-card';
@@ -7,8 +8,10 @@ import { HomeKpi, type KpiChange } from '@/components/home/home-kpi';
 import { NoBrandCard } from '@/components/home/no-brand-card';
 import { QuickLinks } from '@/components/home/quick-links';
 import { RecentMentions } from '@/components/home/recent-mentions';
+import { SocialPulseCard, SocialPulseSkeleton, loadSocialPulse } from '@/components/home/social-pulse-card';
 import { Card, EmptyState, LinkButton, PageHeader } from '@/components/ui';
 import { LinkToggle } from '@/components/ui/client';
+import { apifyConfigured } from '@/lib/apify';
 import { compact, day, platformName } from '@/lib/format';
 import { groupCandidates, sentimentScore, trafficLight, type CandidateGroup } from '@/lib/insights';
 import { mentio, unwrap } from '@/lib/mentio';
@@ -98,6 +101,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
   const competitors = keywordGroups.filter((group) => group.kind === 'competitor' && inCampaign(group));
   const topics = keywordGroups.filter((group) => group.kind === 'topic' && inCampaign(group));
   const entities = [candidate, ...competitors];
+  // Apify is read alongside Mentio and streamed in its own boundary: it never holds or breaks the page.
+  const socialPulse = apifyConfigured() ? loadSocialPulse() : null;
 
   const [entityData, platformBreakdown, topicSeries] = await Promise.all([
     Promise.all(entities.map(async (entity, index) => {
@@ -274,6 +279,14 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
           ) : <EmptyState compact icon={Hash} title="Aún no hay temas vinculados" action={<LinkButton href="/temas" variant="secondary" size="sm">Explorar temas</LinkButton>}>Agrega temas de conversación para saber qué asuntos conectan con tu candidato.</EmptyState>}
         </Card>
       </section>
+
+      {socialPulse ? (
+        <section aria-label="Redes y web">
+          <Suspense fallback={<SocialPulseSkeleton />}>
+            <SocialPulseCard pulse={socialPulse} />
+          </Suspense>
+        </section>
+      ) : null}
 
       <section aria-label="Publicaciones recientes" className="grid gap-4 @3xl/home:grid-cols-2">
         <RecentMentions title="Lo último que te ayuda" mentions={recentPositive} tone="positive" />

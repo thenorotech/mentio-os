@@ -1,9 +1,12 @@
 import Link from 'next/link';
+import { Suspense } from 'react';
 import { ArrowUpRight, ChartNoAxesCombined, FileText, Megaphone } from 'lucide-react';
 import type { AnalyticsSummary, Mention } from '@mentio-dev/sdk';
 import { Badge, Card, EmptyState, LinkButton, PageHeader, buttonClass } from '@/components/ui';
 import { ReportActions } from '@/components/report/report-actions';
+import { SocialReportSection, SocialReportSkeleton, loadSocialReport } from '@/components/report/social-section';
 import styles from '@/components/report/report-print.module.css';
+import { apifyConfigured } from '@/lib/apify';
 import { compact, day } from '@/lib/format';
 import { groupCandidates, plainSentence, trafficLight } from '@/lib/insights';
 import { mentio, unwrap } from '@/lib/mentio';
@@ -89,6 +92,8 @@ export default async function ReportePage({ searchParams }: { searchParams: Prom
   const topics = entities.filter((entity) => entity.kind === 'topic');
   const contenderIds = [...candidate.keywordIds, ...competitors.flatMap((entity) => entity.keywordIds)];
   const allReportIds = [...contenderIds, ...topics.flatMap((entity) => entity.keywordIds)];
+  // Apify is read alongside Mentio and streamed in its own boundary: when it fails, the section is left out.
+  const socialReport = apifyConfigured() ? loadSocialReport() : null;
 
   const [summaryChunks, voiceChunks] = await Promise.all([
     Promise.all(chunks(candidate.keywordIds, 50).map((keywordIds) =>
@@ -301,6 +306,11 @@ export default async function ReportePage({ searchParams }: { searchParams: Prom
           )}
         </section>
       </div>
+      {socialReport ? (
+        <Suspense fallback={<SocialReportSkeleton />}>
+          <SocialReportSection report={socialReport} />
+        </Suspense>
+      ) : null}
       <p className={`${styles.muted} flex items-center gap-1.5 text-xs text-muted-foreground`}>
         <ChartNoAxesCombined className="size-3.5" aria-hidden="true" />
         Los cálculos incluyen todas las variantes activas de cada candidato, adversario y tema.
