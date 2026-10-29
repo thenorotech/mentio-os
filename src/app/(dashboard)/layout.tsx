@@ -4,8 +4,9 @@ import { brand } from '@/brand.config';
 import { AppSidebar, BrandMark, type Workspace } from '@/components/app-sidebar';
 import { CommandMenu } from '@/components/command-menu';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { currentAccount } from '@/auth';
+import { accountsEnabled } from '@/lib/accounts';
 import { mentio } from '@/lib/mentio';
-import { passwordProtected } from '@/lib/session';
 
 // Every page reads the workspace live, the sidebar included.
 export const dynamic = 'force-dynamic';
@@ -18,10 +19,10 @@ async function workspace(): Promise<Workspace> {
 
 /** The dashboard: the sidebar, the page, and the drawer a list opened over it (@drawer). */
 export default async function DashboardLayout({ children, drawer }: { children: ReactNode; drawer: ReactNode }) {
-  const ws = await workspace();
+  const [ws, account] = await Promise.all([workspace(), accountsEnabled() ? currentAccount() : null]);
   return (
     <SidebarProvider>
-      <AppSidebar workspace={ws} canSignOut={passwordProtected()} />
+      <AppSidebar workspace={ws} account={account} />
       <SidebarInset className="min-w-0">
         <header className="flex h-12 items-center gap-2 border-b px-4 md:hidden">
           <SidebarTrigger />

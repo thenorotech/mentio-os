@@ -1,25 +1,40 @@
 /**
- * The API client, server side only. The API key is read from the
- * environment here and nowhere else; pages and server actions import
- * `mentio()`, and nothing that imports this file can be bundled for the
- * browser (the `typeof window` check fails loudly if it ever is).
+ * The API client, server side only. The API key is resolved here and
+ * nowhere else: the signed-in account's key (src/lib/accounts.ts) when
+ * AUTH_ACCOUNTS is set, MENTIO_API_KEY otherwise. It is looked up on every
+ * request, so one client serves every account. Pages and server actions
+ * import `mentio()`, and nothing that imports this file can be bundled for
+ * the browser (the `typeof window` check fails loudly if it ever is).
  */
 import { createMentio } from '@mentio-dev/sdk';
+import { auth } from '@/auth';
 import { apiErrorMessage } from '@/lib/action';
+import { accountById, accountsEnabled } from '@/lib/accounts';
 
 if (typeof window !== 'undefined') {
   throw new Error('Este módulo solo se ejecuta en el servidor: la clave de API nunca debe llegar al navegador.');
+}
+
+async function apiKey(): Promise<string> {
+  if (accountsEnabled()) {
+    const account = accountById((await auth())?.user?.id);
+    if (!account) throw new Error('Tu sesión terminó. Vuelve a entrar.');
+    return account.apiKey;
+  }
+  const key = process.env.MENTIO_API_KEY;
+  if (!key) {
+    throw new Error('La clave de API no está configurada. Copia .env.example a .env.local y agrega tu clave.');
+  }
+  return key;
 }
 
 let client: ReturnType<typeof createMentio> | undefined;
 
 export function mentio() {
   if (client) return client;
-  const apiKey = process.env.MENTIO_API_KEY;
-  if (!apiKey) {
-    throw new Error('La clave de API no está configurada. Copia .env.example a .env.local y agrega tu clave.');
-  }
-  client = createMentio({ apiKey, ...(process.env.MENTIO_API_URL ? { baseUrl: process.env.MENTIO_API_URL } : {}) });
+  // The placeholder key is never sent: `auth` below replaces it per request.
+  client = createMentio({ apiKey: '', ...(process.env.MENTIO_API_URL ? { baseUrl: process.env.MENTIO_API_URL } : {}) });
+  client.client.setConfig({ auth: apiKey });
   return client;
 }
 

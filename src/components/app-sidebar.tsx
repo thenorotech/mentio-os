@@ -46,6 +46,8 @@ import { DOCS, NAV } from '@/lib/nav';
 import { cn } from '@/lib/utils';
 
 export type Workspace = { name: string | null };
+/** The signed-in account (src/auth.ts), or null when sign-in is off. */
+export type SignedInAccount = { name: string; email: string };
 
 export function BrandMark({ className }: { className?: string }) {
   return brand.logo ? (
@@ -59,7 +61,7 @@ export function BrandMark({ className }: { className?: string }) {
 
 const ROW = 'h-9 gap-2.5 px-3 text-muted-foreground data-active:text-sidebar-accent-foreground';
 
-export function AppSidebar({ workspace, canSignOut = false }: { workspace: Workspace; canSignOut?: boolean }) {
+export function AppSidebar({ workspace, account = null }: { workspace: Workspace; account?: SignedInAccount | null }) {
   const path = usePathname();
   const { theme, setTheme } = useTheme();
   const isActive = (href: string) => (href === '/' ? path === '/' : path === href || path.startsWith(`${href}/`));
@@ -135,7 +137,7 @@ export function AppSidebar({ workspace, canSignOut = false }: { workspace: Works
               </Avatar>
               <span className="grid min-w-0 flex-1 leading-tight">
                 <span className="truncate text-sm font-medium">{workspace.name ?? brand.name}</span>
-                <span className="truncate text-xs text-muted-foreground">Espacio de trabajo</span>
+                <span className="truncate text-xs text-muted-foreground">{account?.email ?? 'Espacio de trabajo'}</span>
               </span>
               <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />
             </DropdownMenuTrigger>
@@ -156,9 +158,13 @@ export function AppSidebar({ workspace, canSignOut = false }: { workspace: Works
                   </DropdownMenuRadioGroup>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
-              {canSignOut ? (
+              {account ? (
                 <>
                   <DropdownMenuSeparator />
+                  <div className="grid px-2 py-1.5 leading-tight">
+                    <span className="truncate text-sm font-medium">{account.name}</span>
+                    <span className="truncate text-xs text-muted-foreground">{account.email}</span>
+                  </div>
                   <DropdownMenuItem onClick={() => void signOut()}>
                     <LogOut /> Cerrar sesión
                   </DropdownMenuItem>
