@@ -17,6 +17,7 @@ A dashboard over the public Mentio API (https://docs.mentio.dev). There is no da
 - **Writes**: a server action `(state: ActionState, form: FormData) => Promise<ActionState>` returning `run(async () => { ...; revalidatePath(...); return 'Saved'; })` from `src/lib/action.ts`, rendered with `<ActionForm>` and `<SubmitButton>` from `src/components/ui/client.tsx`, so errors show next to the button. PATCH bodies are partial; `null` clears.
 - **UI**: compose `src/components/ui` (cards, tables, badges, forms, charts); brand values come from `src/brand.config.ts`; the sidebar is `src/lib/nav.ts`.
 - **API shapes**: the SDK types (`node_modules/@mentio-dev/sdk/dist/index.d.ts`) and https://api.mentio.dev/v1/openapi.json. Never guess a field.
+- **Apify (scraping)**: only `src/lib/apify.ts` reads `APIFY_TOKEN`; Apify's runs and datasets are the storage (still no database). A source is an adapter in `src/lib/scraping/sources.ts` (actor, input, `normalize` to `ScrapedItem`); metrics are pure in `src/lib/scraping/metrics.ts`; pages live under `/redes`. Never guess an actor's field: read it through `src/lib/scraping/read.ts`, which tolerates a missing one.
 - **Try changes without a key**: `npm run demo` (a fake API built from the OpenAPI document; `DEMO_API_LOG=1` prints every write it receives). Check with `npm run typecheck` and `npm run build`.
 
 ## UI
