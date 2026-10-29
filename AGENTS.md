@@ -39,4 +39,4 @@ A dashboard over the public Mentio API (https://docs.mentio.dev). Every workspac
 - Feedback: a write's result is a Sonner toast (`ActionForm`/`FormCard` do it); a page has a `loading.tsx` skeleton; a drawer form marks itself clean on save (`DrawerSavedContext`) and otherwise asks before discarding (`useDiscardGuard`).
 - Shortcuts: ⌘K is `CommandMenu` (add a page to `NAV` and it is listed); `/` focuses the `input[data-search]` of the page; `C` presses the element with `data-create` (pass `create` to `LinkButton` or `DrawerButton`).
 - Auth: Auth.js v5 (`src/auth.ts`, credentials against the `Account` table) gated in `src/proxy.ts`; on with `DATABASE_URL`, off without it. The dashboard lives in the `(dashboard)` route group; `/login` and `/register` sit outside it.
-- Database: `npm run build` runs `prisma generate && prisma db push`; CI runs `npm run build:check` (no database).
+- Database: `npm run build` runs `prisma generate && prisma db push --accept-data-loss`; CI runs `npm run build:check` (no database).
