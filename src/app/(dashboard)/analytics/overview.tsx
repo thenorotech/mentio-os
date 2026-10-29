@@ -1,6 +1,6 @@
 import type { AnalyticsSummary } from '@mentio-dev/sdk';
 import { PlatformIcon } from '@/components/platform-icon';
-import { BarList, CHART_COLORS, Card, EmptyState, LinkButton, StackedBars, Stat } from '@/components/ui';
+import { BarList, CHART_COLORS, Card, EmptyState, LinkButton, StackedBars, Stat, KpiStrip } from '@/components/ui';
 import { InfoTip } from '@/components/info-tip';
 import { compact, platformName } from '@/lib/format';
 import { mentio, unwrap } from '@/lib/mentio';
@@ -48,7 +48,7 @@ export async function Overview({ query, summary }: { query: WindowQuery; summary
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 @2xl:grid-cols-4">
+      <KpiStrip>
         <Stat label={<span className="inline-flex items-center gap-1">Menciones <InfoTip term="menciones" /></span>} value={compact(summary.matched)} delta={pct(summary.matched, prev?.matched)} spark={points.map((p) => p.matched)} hint={`${compact(summary.posts)} publicaciones`} href={link({})} />
         <Stat
           label={<span className="inline-flex items-center gap-1">Relevantes <InfoTip term="relevancia" /></span>}
@@ -72,14 +72,14 @@ export async function Overview({ query, summary }: { query: WindowQuery; summary
         <Stat label={<span className="inline-flex items-center gap-1">Publicaciones <InfoTip text="Cantidad de posts y reseñas recopilados durante el periodo." /></span>} value={compact(summary.posts)} delta={pct(summary.posts, prev?.posts)} />
         <Stat label={<span className="inline-flex items-center gap-1">Intención de apoyo <InfoTip term="intención" /></span>} value={compact(summary.buyIntent)} delta={pct(summary.buyIntent, prev?.buyIntent)} href={link({ intents: 'buy_intent' })} />
         <Stat label={<span className="inline-flex items-center gap-1">Preguntas <InfoTip term="intención" /></span>} value={compact(summary.questions)} delta={pct(summary.questions, prev?.questions)} href={link({ intents: 'question' })} />
-      </div>
+      </KpiStrip>
 
       <Card title={<span className="inline-flex items-center gap-1">Menciones en el tiempo <InfoTip term="menciones" /></span>} description={`Por ${{ hour: 'hora', day: 'día', week: 'semana', month: 'mes' }[series.window.bucket] ?? series.window.bucket}. Las barras muestran menciones por canal; la línea oscura, las relevantes, y la discontinua, el periodo anterior.`}>
         {labels.length === 0 ? chartEmpty('Aún no hay menciones en el periodo', 'Registra a “María López” y el tema “seguridad” para ver la conversación por día y canal.') : <StackedBars
           labels={labels}
           stacks={stacks}
           lines={[
-            { name: 'Relevantes', color: '#18181b', values: points.map((p) => p.relevant) },
+            { name: 'Relevantes', color: 'var(--foreground)', values: points.map((p) => p.relevant) },
             ...(previous.length === points.length ? [{ name: 'Periodo anterior', color: '#a1a1aa', values: previous.map((p) => p.matched), dashed: true }] : []),
           ]}
         />}
@@ -113,14 +113,14 @@ export async function Overview({ query, summary }: { query: WindowQuery; summary
       </div>
 
       <Card title={<span className="inline-flex items-center gap-1">Seguimiento de menciones <InfoTip text="Muestra cuántas menciones están abiertas, resueltas o ignoradas y cuánto tarda el equipo en atenderlas." /></span>} description="Estado de las menciones en este periodo.">
-        <div className="grid gap-3 @lg:grid-cols-3 @4xl:grid-cols-6">
+        <KpiStrip>
           <Stat label={<span className="inline-flex items-center gap-1">Abiertas <InfoTip text="Menciones relevantes que todavía no se han marcado como resueltas o ignoradas." /></span>} value={compact(summary.triage.open)} href={link({ status: 'open' })} />
           <Stat label={<span className="inline-flex items-center gap-1">Resueltas <InfoTip text="Menciones que el equipo ya atendió y marcó como resueltas." /></span>} value={compact(summary.triage.done)} href={link({ status: 'done' })} />
           <Stat label={<span className="inline-flex items-center gap-1">Ignoradas <InfoTip text="Menciones que el equipo decidió no seguir atendiendo." /></span>} value={compact(summary.triage.ignored)} href={link({ status: 'ignored' })} />
           <Stat label={<span className="inline-flex items-center gap-1">Pendientes por más de 24 h <InfoTip text="Menciones relevantes que siguen abiertas después de un día." /></span>} value={compact(summary.triage.waiting)} hint="Relevantes y aún abiertas" />
           <Stat label={<span className="inline-flex items-center gap-1">Atendidas <InfoTip text="Porcentaje de menciones relevantes que ya fueron resueltas." /></span>} value={summary.triage.handledRate === null ? 's/d' : `${Math.round(summary.triage.handledRate * 100)}%`} hint="Resueltas de las relevantes" />
           <Stat label={<span className="inline-flex items-center gap-1">Tiempo medio para resolver <InfoTip text="Tiempo habitual entre la llegada de una mención y el momento en que el equipo la resuelve." /></span>} value={<span className="text-base">{duration(summary.triage.medianTimeToDoneMs)}</span>} />
-        </div>
+        </KpiStrip>
       </Card>
     </div>
   );

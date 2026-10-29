@@ -1,5 +1,5 @@
 import type { ReviewsReport } from '@mentio-dev/sdk';
-import { BarList, Card, EmptyState, LinkButton, Stat, Table, td, TableCell, TableRow } from '@/components/ui';
+import { BarList, Card, EmptyState, LinkButton, Stat, Table, td, TableCell, TableRow, KpiStrip } from '@/components/ui';
 import { InfoTip } from '@/components/info-tip';
 import { compact, platformName, tagName } from '@/lib/format';
 import { Delta, Sparkline } from './charts';
@@ -17,7 +17,7 @@ export function Reviews({ report, query }: { report: ReviewsReport; query: Windo
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-3 @lg:grid-cols-2 @4xl:grid-cols-4">
+      <KpiStrip>
         <Stat label={<span className="inline-flex items-center gap-1">Reseñas <InfoTip term="menciones" /></span>} value={compact(totals.reviews)} hint={<Delta current={totals.reviews} previous={previous?.reviews} />} href={link({})} />
         <Stat
           label={<span className="inline-flex items-center gap-1">Calificación promedio <InfoTip text="Promedio de estrellas que recibieron las reseñas durante el periodo." /></span>}
@@ -26,7 +26,7 @@ export function Reviews({ report, query }: { report: ReviewsReport; query: Windo
         />
         <Stat label={<span className="inline-flex items-center gap-1">Con respuesta <InfoTip text="Reseñas a las que el equipo ya respondió." /></span>} value={compact(totals.responded)} hint={totals.reviews ? `${Math.round((totals.responded / totals.reviews) * 100)}% de las reseñas` : undefined} />
         <Stat label={<span className="inline-flex items-center gap-1">Abiertas con 1 o 2 estrellas <InfoTip text="Reseñas con calificación baja que siguen sin resolver ni ignorar." /></span>} value={compact(totals.openNegative)} hint="Sin resolver ni ignorar" href={link({ ratings: '1,2', status: 'open' })} />
-      </div>
+      </KpiStrip>
 
       <div className="grid gap-6 @4xl:grid-cols-2">
         <Card title={<span className="inline-flex items-center gap-1">Calificaciones <InfoTip text="Estrellas recibidas por las reseñas durante el periodo." /></span>}>

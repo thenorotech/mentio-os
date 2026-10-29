@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Download, Users, UsersRound } from 'lucide-react';
 import { ActionForm, DrawerButton, SubmitButton } from '@/components/ui/client';
-import { Badge, EmptyState, Field, Input, LinkButton, OffsetPager, PageHeader, Table, buttonClass, td, TableCell, TableRow, rowLink } from '@/components/ui';
+import { Badge, DataView, EmptyState, Field, Input, LinkButton, OffsetPager, Table, buttonClass, td, TableCell, TableRow, rowLink } from '@/components/ui';
 import { InfoTip } from '@/components/info-tip';
 import { UrlFilters } from '@/components/url-filters';
 import { compact, platformName, timeAgo } from '@/lib/format';
@@ -37,21 +37,30 @@ export default async function People({ searchParams }: { searchParams: Promise<S
   ).toString();
 
   return (
-    <div className="space-y-4">
-      <PageHeader
-        title={<span className="inline-flex items-center gap-1">Audiencia <InfoTip text="Personas y cuentas que publicaron sobre los candidatos o temas que monitorea tu campaña." /></span>}
-        description="Autores que mencionaron a tus candidatos o temas, con sus cuentas agrupadas para comparar el alcance y la conversación."
+    <DataView
+        title="Personas"
+        notice={
+          segment ? (
+            <>
+              <span>
+                Segmento <span className="font-medium text-foreground">{segment.name}</span>
+                {segment.description ? <>: {segment.description}</> : null}
+              </span>
+              <Link href={`/segments/${segment.id}`} className="font-medium text-primary hover:underline">Editar segmento</Link>
+            </>
+          ) : (
+            <span>Autores que mencionaron a tus candidatos o temas, con sus cuentas agrupadas para comparar alcance y conversación.</span>
+          )
+        }
         actions={
           <>
             <a href={`/people/export${filterQuery ? `?${filterQuery}` : ''}`} className={buttonClass('secondary')} download>
               <Download /> Exportar CSV
             </a>
-            <LinkButton href="/segments">Segmentos</LinkButton>
           </>
         }
-      />
-
-      <UrlFilters
+        toolbar={<UrlFilters
+        className="grid gap-2"
         search={{ placeholder: 'Nombre, usuario o enlace al perfil' }}
         sort={{ options: SORTS.map((value) => ({ value, label: SORT_LABELS[value] })) }}
         filters={peopleFilterDefs(members.data, segments.data)}
@@ -67,19 +76,8 @@ export default async function People({ searchParams }: { searchParams: Promise<S
             </DrawerButton>
           ) : null
         }
-      />
-
-      {segment ? (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line bg-brand-soft/40 px-4 py-3 text-sm">
-          <p>
-            Segment <span className="font-medium">{segment.name}</span>
-            {segment.description ? <span className="text-muted-foreground">: {segment.description}</span> : null}
-          </p>
-          <Link href={`/segments/${segment.id}`} className="text-primary hover:underline">Editar segmento</Link>
-        </div>
-      ) : null}
-
-      <p className="text-xs text-muted-foreground">{page.total} {page.total === 1 ? 'autor' : 'autores'}</p>
+      />}
+    >
 
       {page.data.length === 0 ? (
         <EmptyState icon={Users} title="Ningún autor coincide con estos filtros." example="Una periodista que publique varias veces sobre “seguridad” aparecerá aquí como autora de la conversación." action={<div className="flex flex-wrap justify-center gap-2"><LinkButton href="/people">Quitar filtros</LinkButton><LinkButton href="/keywords/new" variant="primary">Agregar términos a la campaña</LinkButton></div>}>Cuando aparezcan menciones nuevas, sus autores se agruparán aquí para que puedas revisar su actividad.</EmptyState>
@@ -129,8 +127,7 @@ export default async function People({ searchParams }: { searchParams: Promise<S
       )}
 
       <OffsetPager total={page.total} limit={LIMIT} offset={offset} href={(o) => withParams('/people', params, { offset: o ? String(o) : undefined })} />
-
-    </div>
+    </DataView>
   );
 }
 

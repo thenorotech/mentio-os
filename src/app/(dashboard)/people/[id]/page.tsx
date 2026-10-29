@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ActionForm, SubmitButton } from '@/components/ui/client';
-import { Badge, Card, DateTimePicker, EmptyState, Field, Input, LinkButton, PageHeader, Select, Stat, Textarea, buttonClass, sentimentTone, SwitchRow } from '@/components/ui';
+import { Badge, Card, DateTimePicker, EmptyState, Field, Input, LinkButton, PageHeader, Select, Stat, Textarea, buttonClass, sentimentTone, SwitchRow, KpiStrip } from '@/components/ui';
 import { InfoTip } from '@/components/info-tip';
 import { Button } from '@/components/ui/button';
 import { compact, date, platformName, tagName, timeAgo } from '@/lib/format';
@@ -56,7 +56,7 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
         }
       />
 
-      <div className="grid gap-3 @lg:grid-cols-2 @4xl:grid-cols-5">
+      <KpiStrip>
         <Stat label={<span className="inline-flex items-center gap-1">Seguidores <InfoTip term="alcance" /></span>} value={reach.followers === null ? '?' : compact(reach.followers)} hint={reach.posts !== null ? `${compact(reach.posts)} publicaciones` : undefined} />
         <Stat label={<span className="inline-flex items-center gap-1">Menciones <InfoTip term="menciones" /></span>} value={stats.mentions} hint={`${stats.relevant} relevantes`} />
         <Stat label={<span className="inline-flex items-center gap-1">Primera actividad <InfoTip text="Fecha de la primera mención que se registró para este autor." /></span>} value={<span className="text-base">{timeAgo(stats.firstSeenAt)}</span>} hint={date(stats.firstSeenAt)} />
@@ -66,7 +66,7 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
           value={<span className="text-base">{outreach.lastContactedAt ? timeAgo(outreach.lastContactedAt) : 'Nunca'}</span>}
           hint={outreach.owner ? `Responsable: ${outreach.owner.name ?? outreach.owner.email}` : 'Sin responsable'}
         />
-      </div>
+      </KpiStrip>
 
       <div className="grid gap-6 @4xl:grid-cols-[3fr_2fr]">
         <div className="min-w-0 space-y-6">

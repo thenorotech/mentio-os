@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Webhook, Plus } from 'lucide-react';
-import { Badge, EmptyState, LinkButton, PageHeader, Table, td, TableCell, TableRow, rowLink } from '@/components/ui';
+import { Badge, EmptyState, LinkButton, Table, td, TableCell, TableRow, rowLink, DataView } from '@/components/ui';
 import { timeAgo } from '@/lib/format';
 import { mentio, unwrap } from '@/lib/mentio';
 import { KINDS, KIND_LABELS, targetText } from './kinds';
@@ -13,12 +13,11 @@ export default async function Channels() {
   const channels = unwrap(await mentio().listChannels()).data;
 
   return (
-    <div className="space-y-8">
-      <PageHeader
-        title="Canales"
-        description="Canales de Slack, listas de correo, webhooks y chats de Telegram donde se envían las alertas de campaña."
-        actions={<LinkButton href="/channels/new" variant="primary" create><Plus /> Crear canal</LinkButton>}
-      />
+    <DataView
+      title="Canales"
+      notice="Canales de Slack, listas de correo, webhooks y chats de Telegram donde se envían las alertas de campaña."
+      actions={<LinkButton href="/channels/new" variant="primary" create><Plus /> Crear canal</LinkButton>}
+    >
 
       {channels.length === 0 ? (
         <EmptyState icon={Webhook} title="Aún no hay canales">
@@ -29,8 +28,8 @@ export default async function Channels() {
           const rows = channels.filter((c) => c.kind === kind);
           if (rows.length === 0) return null;
           return (
-            <section key={kind}>
-              <h2 className="mb-2 text-sm font-semibold">{KIND_LABELS[kind]}</h2>
+            <section key={kind} aria-label={KIND_LABELS[kind]}>
+              <h2 className="border-b bg-muted/40 px-(--page-gutter) py-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">{KIND_LABELS[kind]}</h2>
               <Table head={['Canal', 'Destino', 'Alertas', 'Últimos 7 días', 'Último envío']}>
                 {rows.map((channel) => (
                   <TableRow key={channel.id}>
@@ -45,7 +44,7 @@ export default async function Channels() {
                     </TableCell>
                     <TableCell className={`${td} text-xs whitespace-nowrap`}>
                       {channel.stats.activeAlerts} activas de {channel.stats.alerts}
-                      {channel.stats.activeAlerts === 0 ? <p className="text-amber-700">No recibe avisos</p> : null}
+                      {channel.stats.activeAlerts === 0 ? <p className="text-amber-600 dark:text-amber-500">No recibe avisos</p> : null}
                     </TableCell>
                     <TableCell className={`${td} text-xs whitespace-nowrap`}>
                       {channel.stats.last7d.total} envíos
@@ -59,6 +58,6 @@ export default async function Channels() {
           );
         })
       )}
-    </div>
+    </DataView>
   );
 }

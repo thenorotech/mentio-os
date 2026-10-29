@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Bell, Plus, Sparkles } from 'lucide-react';
-import { Badge, Conditions, EmptyState, LinkButton, PageHeader, Table, td, TableCell, TableRow, rowLink } from '@/components/ui';
+import { Badge, Conditions, EmptyState, LinkButton, Table, td, TableCell, TableRow, rowLink, DataView } from '@/components/ui';
 import { ActionForm, SubmitButton } from '@/components/ui/client';
 import { compact, date, timeAgo } from '@/lib/format';
 import { mentio, unwrap } from '@/lib/mentio';
@@ -16,12 +16,11 @@ export default async function Alerts() {
   const [alerts, context] = await Promise.all([mentio().listAlerts().then(unwrap), loadRuleContext()]);
 
   return (
-    <div>
-      <PageHeader
-        title="Alertas"
-        description="Configura reglas para enviar menciones de candidatos y temas a tus canales, al momento o en un resumen periódico."
-        actions={<><LinkButton href="/alerts/plantillas" variant="secondary"><Sparkles /> Usar una plantilla</LinkButton><LinkButton href="/alerts/new" variant="primary" create><Plus /> Crear alerta</LinkButton></>}
-      />
+    <DataView
+      title="Alertas"
+      notice="Reglas que envían menciones de candidatos y temas a tus canales, al momento o en un resumen periódico."
+      actions={<><LinkButton href="/alerts/plantillas" variant="secondary"><Sparkles /> Usar una plantilla</LinkButton><LinkButton href="/alerts/new" variant="primary" create><Plus /> Crear alerta</LinkButton></>}
+    >
 
       {alerts.data.length === 0 ? (
         <EmptyState icon={Bell} title="Aún no hay alertas">
@@ -47,7 +46,7 @@ export default async function Alerts() {
               </TableCell>
               <TableCell className={td}>
                 <div className="flex flex-wrap gap-1">
-                  {alert.channels.length ? alert.channels.map((c) => <Badge key={c.id} tone="outline">{c.label}</Badge>) : <span className="text-xs text-amber-700">Sin canal</span>}
+                  {alert.channels.length ? alert.channels.map((c) => <Badge key={c.id} tone="outline">{c.label}</Badge>) : <Badge tone="warn">Sin canal</Badge>}
                 </div>
               </TableCell>
               <TableCell className={`${td} text-xs whitespace-nowrap text-muted-foreground`}>
@@ -65,6 +64,6 @@ export default async function Alerts() {
           ))}
         </Table>
       )}
-    </div>
+    </DataView>
   );
 }

@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { Badge, Card, LinkButton, Notice, PageHeader, Stat, Table, td, TableCell, TableRow } from '@/components/ui';
+import { Badge, Card, LinkButton, Notice, PageHeader, Stat, Table, td, TableCell, TableRow, KpiStrip } from '@/components/ui';
 import { InfoTip } from '@/components/info-tip';
 import { compact, date, platformName, timeAgo } from '@/lib/format';
 import { mentio, unwrap } from '@/lib/mentio';
@@ -49,12 +49,12 @@ export default async function KeywordDetail({ params }: { params: Promise<{ id: 
         </Notice>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-3 @4xl:grid-cols-5">
+      <KpiStrip>
         <Stat label={<span className="inline-flex items-center gap-1">Menciones <InfoTip term="menciones" /></span>} value={compact(stats.mentions)} hint="todas las coincidencias" href={mentionsHref} />
         <Stat label={<span className="inline-flex items-center gap-1">Relevantes <InfoTip term="relevancia" /></span>} value={compact(stats.relevant)} hint={`${stats.feedback.relevant} marcadas relevantes, ${stats.feedback.notRelevant} no relevantes`} />
         <Stat label={<span className="inline-flex items-center gap-1">Últimos 7 días <InfoTip term="menciones" /></span>} value={compact(stats.last7d)} hint={stats.lastMentionAt ? `última ${timeAgo(stats.lastMentionAt)}` : 'sin menciones'} />
         <Stat label={<span className="inline-flex items-center gap-1">Este mes <InfoTip term="menciones" /></span>} value={compact(stats.thisMonth)} hint={keyword.cap ? `límite ${compact(keyword.cap.mentions)}` : 'sin límite'} />
-      </div>
+      </KpiStrip>
 
       <div className="grid gap-6 @4xl:grid-cols-2">
         <Card title={<span className="inline-flex items-center gap-1">Límite mensual de menciones <InfoTip term="menciones" /></span>}>

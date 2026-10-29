@@ -2,7 +2,7 @@ import { Plus } from 'lucide-react';
 import Link from 'next/link';
 import { Layers } from 'lucide-react';
 import { ActionForm, SubmitButton, DrawerButton } from '@/components/ui/client';
-import { Badge, Card, Conditions, EmptyState, Field, Input, LinkButton, PageHeader, Table, td, TableCell, TableRow, rowLink } from '@/components/ui';
+import { Badge, Card, Conditions, EmptyState, Field, Input, LinkButton, Table, td, TableCell, TableRow, rowLink, DataView } from '@/components/ui';
 import { InfoTip } from '@/components/info-tip';
 import { timeAgo } from '@/lib/format';
 import { mentio, unwrap } from '@/lib/mentio';
@@ -20,13 +20,11 @@ export default async function Segments() {
   const memberNames = new Map(members.data.map((m) => [m.userId, m.name ?? m.email]));
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title={<span className="inline-flex items-center gap-1">Segmentos <InfoTip term="segmento" /></span>}
-        description="Agrupa autores por temas de campaña, conversación o nivel de interacción para comparar cómo responde la audiencia. Los grupos se actualizan cuando llegan nuevas menciones."
+    <DataView
+        title="Segmentos"
+        notice="Autores agrupados por tema, conversación o interacción. Se actualizan cuando llegan nuevas menciones."
         actions={
           <>
-            <LinkButton href="/people">Audiencia</LinkButton>
             <DrawerButton create variant="primary" label="Nuevo segmento" icon={<Plus />} title="Nuevo segmento" description="Guarda filtros para analizar grupos de audiencia de campaña. Se actualizan al llegar nuevas menciones.">
               <ActionForm action={createSegment} className="grid gap-4">
                 <Field label="Nombre"><Input name="name" required maxLength={80} placeholder="Autores que mencionan la movilidad" /></Field>
@@ -37,7 +35,7 @@ export default async function Segments() {
             </DrawerButton>
           </>
         }
-      />
+    >
 
       {segments.data.length === 0 ? (
         <EmptyState icon={Layers} title="Aún no hay segmentos." example="Crea “Autores que mencionan movilidad” para reunir y revisar a quienes publican sobre ese tema." action={<LinkButton href="/people" variant="primary">Explorar audiencia</LinkButton>}>Guarda una plantilla, crea un segmento o filtra la audiencia para seguir a un grupo de autores.</EmptyState>
@@ -81,10 +79,11 @@ export default async function Segments() {
       )}
 
       {segments.presets.length ? (
+        <div className="border-t p-(--page-gutter)">
         <Card title="Plantillas" description="Puntos de partida para crear segmentos. Guarda una y edítala como cualquier otro segmento.">
           <ul className="grid gap-3 @lg:grid-cols-2">
             {segments.presets.map((preset) => (
-              <li key={preset.key} className="flex flex-col justify-between gap-2 rounded-md border border-line p-3">
+              <li key={preset.key} className="flex flex-col justify-between gap-2 rounded-lg border p-3 transition-colors hover:bg-muted/40">
                 <div>
                   <p className="text-sm font-medium">{preset.name}</p>
                   <p className="text-xs text-muted-foreground">{preset.description}</p>
@@ -103,8 +102,8 @@ export default async function Segments() {
             ))}
           </ul>
         </Card>
+        </div>
       ) : null}
-
-    </div>
+    </DataView>
   );
 }

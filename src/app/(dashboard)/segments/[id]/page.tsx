@@ -1,5 +1,5 @@
 import { ActionForm, SubmitButton } from '@/components/ui/client';
-import { Badge, Card, Conditions, Field, Input, LinkButton, PageHeader, Stat } from '@/components/ui';
+import { Badge, Card, Conditions, Field, Input, LinkButton, PageHeader, Stat, KpiStrip } from '@/components/ui';
 import { InfoTip } from '@/components/info-tip';
 import { date } from '@/lib/format';
 import { mentio, unwrap } from '@/lib/mentio';
@@ -32,11 +32,11 @@ export default async function SegmentPage({ params }: { params: Promise<{ id: st
         }
       />
 
-      <div className="grid gap-3 @lg:grid-cols-3">
+      <KpiStrip>
         <Stat label={<span className="inline-flex items-center gap-1">Autores actuales <InfoTip term="autor" /></span>} value={segment.count} href={`/people?segmentId=${segment.id}`} />
         <Stat label={<span className="inline-flex items-center gap-1">Creado <InfoTip text="Fecha en que se guardó este segmento." /></span>} value={<span className="text-base">{date(segment.createdAt)}</span>} />
         <Stat label={<span className="inline-flex items-center gap-1">Actualizado <InfoTip text="Fecha del cambio más reciente en el nombre, la descripción o los filtros." /></span>} value={<span className="text-base">{date(segment.updatedAt)}</span>} />
-      </div>
+      </KpiStrip>
 
       <div className="flex flex-wrap items-center gap-1.5">
         <Conditions conditions={conditions} max={3} empty="Sin condiciones: toda la audiencia." />

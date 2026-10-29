@@ -177,7 +177,7 @@ function ComparePanel({ title, description, rows, color }: {
                   <LabelList
                     dataKey="share"
                     position="right"
-                    fill="#e5e7eb"
+                    fill="var(--muted)"
                     fontSize={11}
                     fontWeight={600}
                     formatter={(value) => `${Number(value).toFixed(1)}%`}

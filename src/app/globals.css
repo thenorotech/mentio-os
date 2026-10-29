@@ -6,8 +6,8 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * The shadcn theme (style base-nova, base color neutral), the same tokens the
- * Mentio dashboard uses. `--brand-accent` comes from brand.config.ts through
+ * The shadcn theme (style base-nova, base color zinc) with Inerpy's tokens
+ * (DESIGN.md). `--brand-accent` comes from brand.config.ts through
  * the root layout, so primary buttons, links, focus rings and charts follow
  * your color. Components are added with `npx shadcn add <name>`.
  */
@@ -46,6 +46,7 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
   /* The brand color and a pale tint of it, for selected chips and soft badges. */
   --color-brand: var(--primary);
   --color-brand-soft: var(--brand-soft);
@@ -61,69 +62,69 @@
 }
 
 :root {
+  /* Inerpy's zinc neutrals (oklch hue ~286), Geist, 10px radius; the brand stays in --primary. */
   --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.141 0.005 285.823);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.141 0.005 285.823);
   --primary: var(--brand-accent, #1421b9);
-  --primary-foreground: #ffffff;
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.967 0.001 286.375);
+  --muted-foreground: oklch(0.552 0.016 285.938);
+  --accent: oklch(0.967 0.001 286.375);
+  --accent-foreground: oklch(0.21 0.006 285.885);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
+  --border: oklch(0.92 0.004 286.32);
+  --input: oklch(0.92 0.004 286.32);
   --ring: var(--primary);
-  /* Corner softness for every component at once. */
-  --radius: 0.375rem;
+  /* Corner softness for every component at once (Inerpy: 10px). */
+  --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-accent: oklch(0.93 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-foreground: oklch(0.141 0.005 285.823);
+  --sidebar-accent: oklch(0.94 0.003 286.32);
+  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
+  --sidebar-border: oklch(0.92 0.004 286.32);
   --brand-soft: color-mix(in oklab, var(--primary) 8%, white);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
   --sidebar-ring: var(--primary);
-  /* Chart series, in rank order (the busiest first): the Mentio dashboard's palette. */
-  --chart-1: #2a78d6;
-  --chart-2: #eb6834;
-  --chart-3: #1baf7a;
-  --chart-4: #eda100;
-  --chart-5: #8b5cf6;
+  /* Chart series in rank order: the brand first, then src/lib/chart-colors.ts. */
+  --chart-1: var(--primary);
+  --chart-2: #0d9488;
+  --chart-3: #f59e0b;
+  --chart-4: #8b5cf6;
+  --chart-5: #0ea5e9;
+  --chart-6: #db2777;
 }
 
-/* Dark mode (the workspace menu's theme switch): the Mentio dashboard's dark tokens. */
+/* Dark mode (the header's theme switch): Inerpy's zinc dark tokens. */
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: oklch(0.141 0.005 285.823);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  --card: oklch(0.21 0.006 285.885);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: oklch(0.21 0.006 285.885);
   --popover-foreground: oklch(0.985 0 0);
   --primary: color-mix(in oklab, var(--brand-accent, #1421b9) 55%, white);
-  --primary-foreground: oklch(0.145 0 0);
-  --secondary: oklch(0.269 0 0);
+  --primary-foreground: oklch(0.141 0.005 285.823);
+  --secondary: oklch(0.274 0.006 286.033);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
+  --muted: oklch(0.274 0.006 286.033);
+  --muted-foreground: oklch(0.705 0.015 286.067);
+  --accent: oklch(0.274 0.006 286.033);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --sidebar: oklch(0.205 0 0);
+  --sidebar: oklch(0.175 0.005 285.823);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent: oklch(0.274 0.006 286.033);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
-}
-.dark {
   --brand-soft: color-mix(in oklab, var(--primary) 14%, transparent);
 }
 
@@ -149,7 +150,7 @@ td {
  * hairline above it and a small uppercase title. Stat cards (size sm) keep theirs.
  */
 [data-drawer] [data-slot='card']:not([data-size='sm']) {
-  @apply gap-3 rounded-none bg-transparent py-0 ring-0;
+  @apply gap-3 rounded-none border-x-0 border-b-0 bg-transparent py-0 shadow-none ring-0;
   border-top: 1px solid var(--border);
   padding-top: 1.25rem;
 }
@@ -185,4 +186,146 @@ td {
 /* The close button stays above the sticky header bar. */
 [data-drawer] > [data-slot='sheet-close'] {
   @apply top-3.5 right-4 z-20;
+}
+
+/* ---------------------------------------------------------------------------
+ * The shell (`.agora-shell`, Inerpy's): inset sidebar, rounded canvas, one
+ * scroll surface. Only density and chrome finish live here; colors are tokens.
+ * ------------------------------------------------------------------------- */
+.agora-shell {
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* A route change fades the canvas in (ShellContent is re-keyed per path). */
+.agora-shell .shell-context-enter {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 180ms var(--ease-out),
+    transform 180ms var(--ease-out);
+
+  @starting-style {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+/* Thin chrome: compact menu buttons with a medium radius, never a pill. */
+.agora-shell [data-slot='sidebar-menu-button'],
+.agora-shell [data-slot='sidebar-menu-sub-button'],
+.agora-shell [data-slot='sidebar-trigger'] {
+  border-radius: calc(var(--radius) - 2px);
+}
+.agora-shell [data-slot='sidebar-menu-button'] {
+  font-size: 13px;
+}
+
+/* A discreet 4px scrollbar across the shell; the sidebar scrolls without one. */
+.agora-shell * {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--foreground) 18%, transparent) transparent;
+}
+.agora-shell *::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.agora-shell *::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--foreground) 18%, transparent);
+  border-radius: 9999px;
+}
+.agora-shell *::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklab, var(--foreground) 32%, transparent);
+}
+.agora-shell [data-sidebar='content'] {
+  scrollbar-width: none;
+}
+.agora-shell [data-sidebar='content']::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pressable {
+    transition:
+      transform 140ms cubic-bezier(0.23, 1, 0.32, 1),
+      background-color 150ms ease,
+      color 150ms ease,
+      border-color 150ms ease;
+  }
+  .pressable:active {
+    transform: scale(0.97);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .agora-shell [data-slot='site-header'] [data-slot='button'],
+  .agora-shell [data-slot='sidebar-trigger'],
+  .agora-shell [data-slot='button'] {
+    transition-property: color, background-color, border-color, box-shadow, transform;
+  }
+  .agora-shell [data-slot='site-header'] [data-slot='button']:active,
+  .agora-shell [data-slot='sidebar-trigger']:active,
+  .agora-shell [data-slot='button']:active {
+    transform: scale(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agora-shell .shell-context-enter {
+    transform: none;
+    transition: opacity 150ms ease;
+
+    @starting-style {
+      opacity: 0;
+      transform: none;
+    }
+  }
+}
+
+/* Table views are full-bleed inside the canvas (Inerpy's data-view): the
+   view cancels the page gutter, the frame drops its card finish, the first
+   column lines up with the toolbar and the pager sits at the frame's foot. */
+[data-slot='data-view'] {
+  margin: calc(var(--page-gutter) * -1);
+  margin-top: calc(var(--page-gutter) * -1 + 0.25rem);
+}
+[data-slot='data-view-frame'] [data-slot='table-frame'] {
+  border-width: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+[data-slot='data-view-frame'] :is(th, td):first-child {
+  padding-inline-start: var(--page-gutter);
+}
+[data-slot='data-view-frame'] :is(th, td):last-child {
+  padding-inline-end: var(--page-gutter);
+}
+[data-slot='data-view-frame'] > [data-slot='empty'] {
+  border-width: 0;
+  border-radius: 0;
+  background: transparent;
+}
+[data-slot='data-view-frame'] > [data-slot='pager'] {
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+  padding: 0.375rem var(--page-gutter);
+}
+
+/* KPI tiles enter one after another (35ms), like Inerpy's strip. */
+[data-slot='kpi-strip'] > :nth-child(2) { animation-delay: 35ms; }
+[data-slot='kpi-strip'] > :nth-child(3) { animation-delay: 70ms; }
+[data-slot='kpi-strip'] > :nth-child(4) { animation-delay: 105ms; }
+[data-slot='kpi-strip'] > :nth-child(5) { animation-delay: 140ms; }
+[data-slot='kpi-strip'] > :nth-child(6) { animation-delay: 175ms; }
+[data-slot='kpi-strip'] > :nth-child(7) { animation-delay: 210ms; }
+[data-slot='kpi-strip'] > :nth-child(n + 8) { animation-delay: 245ms; }
+
+/* The page inside the canvas: Inerpy's gutter (p-4 md:p-6), shared with full-bleed table views. */
+[data-slot='page'] {
+  --page-gutter: 1rem;
+  padding: var(--page-gutter);
+}
+@media (min-width: 48rem) {
+  [data-slot='page'] {
+    --page-gutter: 1.5rem;
+  }
 }

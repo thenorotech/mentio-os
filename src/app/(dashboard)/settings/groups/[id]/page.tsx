@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Badge, Card, Field, Input, LinkButton, PageHeader, Stat, Textarea } from '@/components/ui';
+import { Badge, Card, Field, Input, LinkButton, PageHeader, Stat, Textarea, KpiStrip } from '@/components/ui';
 import { ActionForm, SubmitButton } from '@/components/ui/client';
 import { date } from '@/lib/format';
 import { mentio, unwrap } from '@/lib/mentio';
@@ -31,10 +31,10 @@ export default async function GroupDetail({ params }: { params: Promise<{ id: st
         actions={<LinkButton href={keywordsHref}>Ver candidatos y temas</LinkButton>}
       />
 
-      <div className="grid grid-cols-2 gap-3 @lg:max-w-md">
+      <KpiStrip className="@lg:max-w-md">
         <Stat label="Candidatos y temas" value={n} href={keywordsHref} />
         <Stat label="Activos" value={group.stats.active} hint="sin pausa" />
-      </div>
+      </KpiStrip>
 
       <Card title="Ajustes">
         <ActionForm action={updateGroupAction} className="space-y-4">

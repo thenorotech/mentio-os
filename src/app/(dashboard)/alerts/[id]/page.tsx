@@ -1,4 +1,4 @@
-import { Badge, Card, Field, LinkButton, PageHeader, Stat, Textarea } from '@/components/ui';
+import { Badge, Card, Field, LinkButton, PageHeader, Stat, Textarea, KpiStrip } from '@/components/ui';
 import { ActionForm, SubmitButton } from '@/components/ui/client';
 import { compact, date, timeAgo } from '@/lib/format';
 import { mentio, unwrap } from '@/lib/mentio';
@@ -32,11 +32,11 @@ export default async function AlertDetail({ params }: { params: Promise<{ id: st
         actions={<LinkButton href={`/mentions?alertId=${encodeURIComponent(alert.id)}`}>Ver menciones coincidentes</LinkButton>}
       />
 
-      <div className="grid gap-3 @lg:grid-cols-3">
+      <KpiStrip>
         <Stat label="Envíos en los últimos 7 días" value={compact(alert.stats.sentLast7d)} hint="En todos los canales" />
         <Stat label="Último envío" value={alert.stats.lastSentAt ? timeAgo(alert.stats.lastSentAt) : 'Nunca'} hint={alert.stats.lastSentAt ? date(alert.stats.lastSentAt) : undefined} />
         <Stat label="Programación" value={<span className="text-base">{whenText(alert)}</span>} hint={alert.stats.nextRunAt ? `Siguiente: ${date(alert.stats.nextRunAt)}` : undefined} />
-      </div>
+      </KpiStrip>
 
       <Card title="Probar alerta" description="La prueba envía una muestra a cada canal. Ejecutar el resumen envía ahora las menciones de las últimas 24 horas sin cambiar la programación.">
         <div className="flex flex-wrap items-start gap-3">

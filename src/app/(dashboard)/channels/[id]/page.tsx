@@ -1,4 +1,4 @@
-import { Badge, Card, CheckboxGroup, Field, Input, PageHeader, Stat, Table, Textarea, td, type Tone, TableCell, TableRow } from '@/components/ui';
+import { Badge, Card, CheckboxGroup, Field, Input, PageHeader, Stat, Table, Textarea, td, type Tone, TableCell, TableRow, KpiStrip } from '@/components/ui';
 import { ActionForm, SubmitButton } from '@/components/ui/client';
 import { date, timeAgo } from '@/lib/format';
 import { mentio, unwrap } from '@/lib/mentio';
@@ -40,11 +40,11 @@ export default async function ChannelDetail({ params }: { params: Promise<{ id: 
         }
       />
 
-      <div className="grid gap-3 @lg:grid-cols-3">
+      <KpiStrip>
         <Stat label="Alertas que envían aquí" value={`${channel.stats.activeAlerts} de ${channel.stats.alerts}`} hint={channel.stats.activeAlerts === 0 ? 'Ninguna activa: no recibe avisos' : 'Activas del total'} />
         <Stat label="Envíos en los últimos 7 días" value={channel.stats.last7d.total} hint={channel.stats.last7d.failed ? `${channel.stats.last7d.failed} fallidos` : 'Ninguno fallido'} />
         <Stat label="Último envío" value={channel.stats.lastDeliveryAt ? timeAgo(channel.stats.lastDeliveryAt) : 'Nunca'} hint={date(channel.stats.lastDeliveryAt)} />
-      </div>
+      </KpiStrip>
 
       {channel.kind === 'email' ? (
         <Card title="Destinatarios" description="Las direcciones sin confirmar no reciben avisos hasta que abren el enlace que se les envió.">
