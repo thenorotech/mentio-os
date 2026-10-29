@@ -3,7 +3,7 @@ import { Globe2 } from 'lucide-react';
 import { EmptyState, Notice, PageHeader, Table, TableCell, TableRow, rowLink, td } from '@/components/ui';
 import { PlatformIcon } from '@/components/platform-icon';
 import { UrlFilters } from '@/components/url-filters';
-import { apifyConfigured, isRunning, listAllRuns } from '@/lib/apify';
+import { apifyConfigured, isRunning, listAllRuns, withItemCounts } from '@/lib/apify';
 import { compact, date } from '@/lib/format';
 import { many, type SearchParams } from '@/lib/params';
 import { SOURCES, SOURCE_KEYS, SOURCE_LIST, isSourceKey } from '@/lib/scraping/sources';
@@ -26,7 +26,9 @@ export default async function Recolecciones({ searchParams }: { searchParams: Pr
   if (!apifyConfigured()) return <div>{header}<ApifySetup /></div>;
 
   const chosen = many(params, 'sources').filter(isSourceKey);
-  const { runs, failed } = await listAllRuns(chosen.length ? chosen : SOURCE_KEYS, { limit: 25 });
+  const listed = await listAllRuns(chosen.length ? chosen : SOURCE_KEYS, { limit: 25 });
+  const failed = listed.failed;
+  const runs = await withItemCounts(listed.runs.slice(0, 40));
 
   return (
     <div>

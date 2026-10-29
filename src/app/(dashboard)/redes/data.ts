@@ -1,5 +1,6 @@
 /** Reading scrapes for the "Redes y web" pages: runs from Apify, items normalized, metrics computed. */
 import { datasetItems, listAllRuns, runInput, type ApifyRun } from '@/lib/apify';
+import type { TaggedItem } from '@/lib/scraping/compare';
 import { computeMetrics } from '@/lib/scraping/metrics';
 import { at, list, text } from '@/lib/scraping/read';
 import { normalizeItems, type ScrapedItem, type SourceKey } from '@/lib/scraping/sources';
@@ -8,7 +9,7 @@ import { normalizeItems, type ScrapedItem, type SourceKey } from '@/lib/scraping
 export const timeZone = () => process.env.DASHBOARD_TIMEZONE || 'America/Mexico_City';
 
 export async function runItems(run: ApifyRun, limit?: number): Promise<ScrapedItem[]> {
-  return normalizeItems(run.source, await datasetItems(run, limit));
+  return normalizeItems(run.source, await datasetItems(run, limit), run.id);
 }
 
 /**
@@ -27,6 +28,27 @@ export async function loadLatest(sources: readonly SourceKey[], perSource: numbe
     });
   const unread = runs.filter((_, i) => settled[i].status === 'rejected').map((r) => r.source);
   return { runs, items, failed: [...new Set([...failed, ...unread])], metrics: computeMetrics(items, timeZone()) };
+}
+
+/**
+ * Like `loadLatest`, for the comparison: each item with the targets of the
+ * run that scraped it. An item two runs saw counts once, with both runs'
+ * targets (the newer run's numbers win).
+ */
+export async function loadTagged(sources: readonly SourceKey[], perSource: number) {
+  const { runs, failed } = await listAllRuns(sources, { limit: perSource, succeeded: true });
+  const settled = await Promise.allSettled(runs.map(async (r) => ({ items: await runItems(r), targets: await runTargets(r) })));
+  const byKey = new Map<string, TaggedItem>();
+  for (const result of settled) {
+    if (result.status !== 'fulfilled') continue;
+    for (const item of result.value.items) {
+      const key = `${item.source}:${item.id}`;
+      const known = byKey.get(key);
+      byKey.set(key, { item: known?.item ?? item, targets: [...new Set([...(known?.targets ?? []), ...result.value.targets])] });
+    }
+  }
+  const unread = runs.filter((_, i) => settled[i].status === 'rejected').map((r) => r.source);
+  return { runs, tagged: [...byKey.values()], failed: [...new Set([...failed, ...unread])] };
 }
 
 /** What a run was asked to scrape, from its input: handles, hashtags, terms and URLs. */

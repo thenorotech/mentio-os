@@ -149,6 +149,10 @@ export async function handleApify(req, res, url) {
     return json(res, 200, { data: view(run) }), true;
   }
   if ((m = path.match(/^\/key-value-stores\/([^/]+)\/records\/INPUT$/))) return json(res, 200, runs.get(decodeURIComponent(m[1]))?.input ?? {}), true;
+  if ((m = path.match(/^\/datasets\/([^/]+)$/))) {
+    const run = runs.get(decodeURIComponent(m[1]));
+    return json(res, run ? 200 : 404, run ? { data: { id: run.id, itemCount: run.running ? 0 : run.items } } : { error: { type: 'record-not-found' } }), true;
+  }
   if ((m = path.match(/^\/datasets\/([^/]+)\/items$/))) {
     const run = runs.get(decodeURIComponent(m[1]));
     return json(res, 200, run && !run.running ? datasets.get(run.id) ?? [] : []), true;

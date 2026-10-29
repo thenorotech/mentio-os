@@ -40,6 +40,7 @@ function OutLink({ href, children, className }: { href: string | null; children:
 function HourStrip({ hours, timeZone }: { hours: ScrapeMetrics['hours']; timeZone: string }) {
   const max = Math.max(1, ...hours.map((h) => h.avgInteractions));
   const best = hours.reduce((b, h, i) => (h.avgInteractions > hours[b].avgInteractions ? i : b), 0);
+  if (hours[best].avgInteractions === 0) return <p className="text-sm text-muted-foreground">Sin fechas o interacciones suficientes para calcularlo.</p>;
   return (
     <div>
       <div className="flex h-28 items-end gap-0.5" role="img" aria-label={`La hora con más interacción promedio es las ${best}:00`}>
@@ -67,7 +68,7 @@ function HourStrip({ hours, timeZone }: { hours: ScrapeMetrics['hours']; timeZon
   );
 }
 
-function PostsTable({ posts }: { posts: ScrapedItem[] }) {
+function PostsTable({ posts, timeZone }: { posts: ScrapedItem[]; timeZone: string }) {
   return (
     <Table head={['Publicación', 'Autor', 'Likes', 'Coment.', 'Compart.', 'Vistas', 'Total']}>
       {posts.map((p) => (
@@ -77,7 +78,7 @@ function PostsTable({ posts }: { posts: ScrapedItem[] }) {
               <PlatformIcon platform={p.platform} className="mt-0.5 size-3.5" />
               <span className="line-clamp-2">{p.title || p.text || 'Sin texto'}</span>
             </OutLink>
-            {p.publishedAt ? <p className="mt-0.5 text-xs text-muted-foreground">{date(p.publishedAt)}</p> : null}
+            {p.publishedAt ? <p className="mt-0.5 text-xs text-muted-foreground">{date(p.publishedAt, timeZone)}</p> : null}
           </TableCell>
           <TableCell className={`${td} text-xs text-muted-foreground`}>{p.author ?? '—'}</TableCell>
           {[p.likes, p.comments, p.shares, p.views].map((n, i) => <TableCell key={i} className={`${td} text-xs tabular-nums`}>{compact(n)}</TableCell>)}
@@ -95,7 +96,7 @@ export function MetricsView({ metrics: m, timeZone }: { metrics: ScrapeMetrics; 
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-2 gap-3 @2xl:grid-cols-4">
-        <Stat label={label('Publicaciones', 'Posts y videos recolectados en redes sociales.')} value={compact(t.posts)} spark={stacks.length ? m.days.map((_, i) => stacks.reduce((s, r) => s + (r.values[i] ?? 0), 0)) : undefined} hint={t.first && t.last ? `${date(t.first)} a ${date(t.last)}` : undefined} />
+        <Stat label={label('Publicaciones', 'Posts y videos recolectados en redes sociales.')} value={compact(t.posts)} spark={stacks.length ? m.days.map((_, i) => stacks.reduce((s, r) => s + (r.values[i] ?? 0), 0)) : undefined} hint={t.first && t.last ? `${date(t.first, timeZone)} a ${date(t.last, timeZone)}` : undefined} />
         <Stat label={label('Interacciones', 'Likes, comentarios y compartidos (reposts y citas en X) sumados.')} value={compact(t.interactions)} spark={m.interactionsByDay} hint={`${compact(t.likes)} likes · ${compact(t.comments)} coment. · ${compact(t.shares)} compart.`} />
         <Stat label={label('Vistas', 'Reproducciones y vistas que reporta cada red (Instagram video, X, TikTok, YouTube, Facebook).')} value={compact(t.views)} />
         <Stat label={label('Interacción promedio', 'Interacciones divididas entre publicaciones: cuánto responde la audiencia a cada post.')} value={compact(t.avgInteractions)} hint="por publicación" />
@@ -129,7 +130,7 @@ export function MetricsView({ metrics: m, timeZone }: { metrics: ScrapeMetrics; 
           </Table>
           <div className="space-y-2">
             <h3 className="text-sm font-semibold">{label('Publicaciones con más interacción', 'Las 10 publicaciones con más likes, comentarios y compartidos.')}</h3>
-            <PostsTable posts={m.topPosts} />
+            <PostsTable posts={m.topPosts} timeZone={timeZone} />
           </div>
           <div className="grid gap-4 @4xl:grid-cols-3">
             <Card title={label('Hashtags', 'Hashtags más usados en publicaciones y notas.')}>
@@ -160,7 +161,7 @@ export function MetricsView({ metrics: m, timeZone }: { metrics: ScrapeMetrics; 
               {m.articles.map((a) => (
                 <li key={a.id} className="py-2.5 first:pt-0 last:pb-0">
                   <OutLink href={a.url} className="text-sm font-medium">{a.title || a.text}</OutLink>
-                  <p className="mt-0.5 text-xs text-muted-foreground">{[a.outlet, a.publishedAt ? date(a.publishedAt) : null].filter(Boolean).join(' · ')}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{[a.outlet, a.publishedAt ? date(a.publishedAt, timeZone) : null].filter(Boolean).join(' · ')}</p>
                 </li>
               ))}
             </ul>

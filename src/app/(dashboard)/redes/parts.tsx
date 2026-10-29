@@ -54,7 +54,7 @@ export function NewScrapeButton({ primary = true }: { primary?: boolean }) {
         <Field label="Qué recolectar" hint="@cuenta para perfiles, #tema para hashtags, texto para búsquedas, o una URL. Enter agrega cada uno.">
           <TokenInput name="targets" placeholder="@candidata, #seguridad, “propuesta de agua”" max={20} splitOnComma={false} />
         </Field>
-        <Field label="Resultados por fuente" hint="Más resultados cuestan más créditos de Apify.">
+        <Field label="Resultados por objetivo" hint="Por cada cuenta, hashtag o búsqueda, en cada fuente. Más resultados cuestan más créditos de Apify.">
           <Input name="limit" type="number" min={1} max={500} defaultValue={50} required />
         </Field>
         <Field label="Periodo" group>

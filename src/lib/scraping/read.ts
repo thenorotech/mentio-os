@@ -44,7 +44,8 @@ export function when(...values: unknown[]): string | null {
     let ms = NaN;
     if (typeof value === 'number' && Number.isFinite(value) && value > 0) ms = value < 1e12 ? value * 1000 : value;
     else if (typeof value === 'string' && value.trim()) ms = /^\d+$/.test(value) ? Number(value) * (value.length <= 10 ? 1000 : 1) : Date.parse(value);
-    if (Number.isFinite(ms)) return new Date(ms).toISOString();
+    // Past ±8.64e15 ms a Date is invalid and toISOString throws.
+    if (Number.isFinite(ms) && Math.abs(ms) <= 8.64e15) return new Date(ms).toISOString();
   }
   return null;
 }

@@ -31,10 +31,10 @@ export const REVIEW_PLATFORMS = ['appstore', 'googleplay', 'trustpilot', 'google
 export const INTENTS = ['buy_intent', 'question', 'complaint', 'praise', 'comparison', 'churn_intent', 'bug_report', 'pricing', 'hiring', 'event', 'promotional'] as const;
 export const SENTIMENTS = ['positive', 'neutral', 'negative'] as const;
 
-export function date(iso: string | null | undefined) {
+export function date(iso: string | null | undefined, timeZone?: string) {
   const d = iso ? new Date(iso) : null;
   if (!d || Number.isNaN(d.getTime())) return '';
-  return new Intl.DateTimeFormat('es-MX', { dateStyle: 'medium', timeStyle: 'short' }).format(d);
+  return new Intl.DateTimeFormat('es-MX', { dateStyle: 'medium', timeStyle: 'short', timeZone }).format(d);
 }
 
 const TAG_NAMES: Record<string, string> = {

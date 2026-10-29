@@ -22,7 +22,7 @@ export default async function Recoleccion({ params }: { params: Promise<{ source
   if (!isSourceKey(source)) notFound();
   const run = await getRun(source, id);
   if (!run) notFound();
-  const [targets, items] = await Promise.all([runTargets(run), run.status === 'SUCCEEDED' || run.items > 0 ? runItems(run) : Promise.resolve([])]);
+  const [targets, items] = await Promise.all([runTargets(run), run.datasetId ? runItems(run) : Promise.resolve([])]);
   const live = isRunning(run.status);
   const meta = [run.startedAt ? `Iniciada ${date(run.startedAt)}` : null, `${compact(run.items)} resultados`, run.costUsd === null ? null : `$${run.costUsd.toFixed(3)} USD`].filter(Boolean).join(' · ');
 

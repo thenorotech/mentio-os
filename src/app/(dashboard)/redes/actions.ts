@@ -20,13 +20,19 @@ export async function startScrapeAction(_: ActionState, form: FormData): Promise
     const days = int(form, 'days');
     const scrape = { targets, limit, days: days && days > 0 ? Math.min(days, 365) : null, ...searchLocale() };
 
-    const settled = await Promise.allSettled(sources.map((s) => startRun(s, scrape)));
-    const started = sources.filter((_, i) => settled[i].status === 'fulfilled').map((s) => SOURCES[s].label);
-    const failed = sources.filter((_, i) => settled[i].status === 'rejected').map((s) => SOURCES[s].label);
+    // Each source gets only the targets its actor takes (no search terms as Instagram profiles); one with none is skipped.
+    const plan = sources.map((s) => ({ source: s, targets: targets.filter(SOURCES[s].accepts) })).filter((p) => p.targets.length);
+    const skipped = sources.filter((s) => !plan.some((p) => p.source === s)).map((s) => SOURCES[s].label);
+    if (plan.length === 0) throw new Error('Ninguna fuente elegida acepta estos objetivos: usa @cuentas o #hashtags para redes y texto para Google y Noticias.');
+
+    const settled = await Promise.allSettled(plan.map((p) => startRun(p.source, { ...scrape, targets: p.targets })));
+    const started = plan.filter((_, i) => settled[i].status === 'fulfilled').map((p) => SOURCES[p.source].label);
+    const failed = plan.filter((_, i) => settled[i].status === 'rejected').map((p) => SOURCES[p.source].label);
     revalidatePath('/redes');
     revalidatePath('/redes/recolecciones');
     if (started.length === 0) throw new Error(`No se pudo iniciar en ${failed.join(', ')}. Revisa el token y los actores de Apify.`);
-    return `Recolección iniciada en ${started.join(', ')}${failed.length ? `; falló en ${failed.join(', ')}` : ''}. Los resultados aparecen al terminar.`;
+    const notes = [failed.length ? `falló en ${failed.join(', ')}` : '', skipped.length ? `${skipped.join(', ')} sin objetivos compatibles` : ''].filter(Boolean);
+    return `Recolección iniciada en ${started.join(', ')}${notes.length ? `; ${notes.join('; ')}` : ''}. Los resultados aparecen al terminar.`;
   });
 }
 

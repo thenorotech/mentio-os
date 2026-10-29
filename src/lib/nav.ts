@@ -16,6 +16,7 @@ import {
   Megaphone,
   type LucideIcon,
   Radio,
+  Scale,
   Settings,
   Sparkles,
   Swords,
@@ -40,6 +41,7 @@ export const NAV: NavItem[] = [
     icon: Globe2,
     children: [
       { href: '/redes', label: 'Panorama', icon: LayoutDashboard },
+      { href: '/redes/comparativa', label: 'Comparativa', icon: Scale },
       { href: '/redes/recolecciones', label: 'Recolecciones', icon: ListChecks },
     ],
   },

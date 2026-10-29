@@ -60,11 +60,20 @@ export type Source = {
   actor: string;
   description: string;
   placeholder: string;
+  /** The targets this actor can take; the rest are left out of its run. */
+  accepts: (target: string) => boolean;
   input: (request: ScrapeRequest) => { [key: string]: Json };
-  normalize: (raw: unknown, index: number) => ScrapedItem[];
+  /** `fallback` identifies an item that carries no id of its own (run id and position). */
+  normalize: (raw: unknown, fallback: string) => ScrapedItem[];
 };
 
 const isUrl = (target: string) => /^https?:\/\//i.test(target);
+const urlOn = (target: string, ...hosts: string[]) => {
+  const h = host(target);
+  return h !== null && hosts.some((x) => h === x || h.endsWith(`.${x}`));
+};
+/** One word, no spaces: a page or account name typed without @. */
+const isName = (target: string) => /^[\p{L}\p{N}._-]+$/u.test(target);
 const isHandle = (target: string) => target.startsWith('@');
 const isTag = (target: string) => target.startsWith('#');
 const bare = (target: string) => target.replace(/^[@#]/, '').trim();
@@ -93,8 +102,8 @@ function item(source: SourceKey, kind: ItemKind, platform: string, fields: Parti
   };
 }
 
-/** An item's id: the actor's, else its URL, else its position in the dataset. */
-const idOf = (raw: unknown, index: number, ...keys: string[]) => text(...keys.map((k) => at(raw, k))) ?? `${index}`;
+/** An item's id: the actor's, else its URL, else its run and position. */
+const idOf = (raw: unknown, fallback: string, ...keys: string[]) => text(...keys.map((k) => at(raw, k))) ?? fallback;
 
 export const SOURCES: Record<SourceKey, Source> = {
   instagram: {
@@ -105,6 +114,7 @@ export const SOURCES: Record<SourceKey, Source> = {
     actor: 'apify/instagram-scraper',
     description: 'Publicaciones de perfiles (@usuario) y hashtags (#tema): likes, comentarios y reproducciones.',
     placeholder: '@candidata, #seguridad, https://www.instagram.com/…',
+    accepts: (t) => isHandle(t) || isTag(t) || urlOn(t, 'instagram.com'),
     input: ({ targets, limit, days }) => ({
       directUrls: targets.map((t) => (isUrl(t) ? t : isTag(t) ? `https://www.instagram.com/explore/tags/${encodeURIComponent(bare(t))}/` : `https://www.instagram.com/${bare(t)}/`)),
       resultsType: 'posts',
@@ -112,10 +122,10 @@ export const SOURCES: Record<SourceKey, Source> = {
       addParentData: false,
       ...(days ? { onlyPostsNewerThan: isoDay(days) } : {}),
     }),
-    normalize: (raw, index) => {
+    normalize: (raw, fallback) => {
       const body = text(at(raw, 'caption')) ?? '';
       return [item('instagram', 'post', 'instagram', {
-        id: idOf(raw, index, 'id', 'shortCode', 'url'),
+        id: idOf(raw, fallback, 'id', 'shortCode', 'url'),
         url: text(at(raw, 'url')),
         text: body,
         author: text(at(raw, 'ownerUsername'), at(raw, 'ownerFullName')),
@@ -136,15 +146,16 @@ export const SOURCES: Record<SourceKey, Source> = {
     actor: 'apify/facebook-posts-scraper',
     description: 'Publicaciones de páginas y perfiles públicos: reacciones, comentarios, compartidos y vistas.',
     placeholder: 'NombreDeLaPagina, https://www.facebook.com/…',
+    accepts: (t) => isHandle(t) || (!isTag(t) && isName(t)) || urlOn(t, 'facebook.com', 'fb.com'),
     input: ({ targets, limit, days }) => ({
       startUrls: targets.map((t) => ({ url: isUrl(t) ? t : `https://www.facebook.com/${bare(t)}` })),
       resultsLimit: limit,
       ...(days ? { onlyPostsNewerThan: isoDay(days) } : {}),
     }),
-    normalize: (raw, index) => {
+    normalize: (raw, fallback) => {
       const body = text(at(raw, 'text'), at(raw, 'postText')) ?? '';
       return [item('facebook', 'post', 'facebook', {
-        id: idOf(raw, index, 'postId', 'id', 'url'),
+        id: idOf(raw, fallback, 'postId', 'id', 'url'),
         url: text(at(raw, 'url'), at(raw, 'topLevelUrl')),
         text: body,
         author: text(at(raw, 'pageName'), at(raw, 'user', 'name')),
@@ -166,20 +177,22 @@ export const SOURCES: Record<SourceKey, Source> = {
     actor: 'apidojo/tweet-scraper',
     description: 'Posts de cuentas (@usuario) o búsquedas: likes, respuestas, reposts, citas y vistas.',
     placeholder: '@candidata, "propuesta de seguridad", #debate',
+    accepts: (t) => !isUrl(t) || urlOn(t, 'x.com', 'twitter.com'),
     input: ({ targets, limit, days }) => {
       const since = days ? ` since:${isoDay(days)}` : '';
       return {
         twitterHandles: targets.filter(isHandle).map(bare),
-        searchTerms: targets.filter((t) => !isHandle(t)).map((t) => `${t}${since}`),
+        searchTerms: targets.filter((t) => !isHandle(t) && !isUrl(t)).map((t) => `${t}${since}`),
         startUrls: targets.filter(isUrl),
-        maxItems: limit,
+        maxItems: limit * targets.length,
         sort: 'Latest',
+        ...(days ? { start: isoDay(days) } : {}),
       };
     },
-    normalize: (raw, index) => {
+    normalize: (raw, fallback) => {
       const body = text(at(raw, 'fullText'), at(raw, 'text')) ?? '';
       return [item('x', 'post', 'x', {
-        id: idOf(raw, index, 'id', 'url'),
+        id: idOf(raw, fallback, 'id', 'url'),
         url: text(at(raw, 'url'), at(raw, 'twitterUrl')),
         text: body,
         author: text(at(raw, 'author', 'userName'), at(raw, 'author', 'name')),
@@ -201,19 +214,21 @@ export const SOURCES: Record<SourceKey, Source> = {
     actor: 'clockworks/tiktok-scraper',
     description: 'Videos de perfiles (@usuario), hashtags (#tema) o búsquedas: reproducciones, likes, comentarios y compartidos.',
     placeholder: '@candidata, #elecciones, debate presidencial',
+    accepts: (t) => !isUrl(t) || urlOn(t, 'tiktok.com'),
     input: ({ targets, limit }) => ({
-      profiles: targets.filter(isHandle).map(bare),
+      // A profile URL (tiktok.com/@user) is a profile; a /video/ URL is a post.
+      profiles: [...targets.filter(isHandle).map(bare), ...targets.filter((t) => isUrl(t) && !/\/video\//.test(t)).flatMap((t) => t.match(/\/@([^/?#]+)/)?.[1] ?? [])],
       hashtags: targets.filter(isTag).map(bare),
       searchQueries: targets.filter((t) => !isHandle(t) && !isTag(t) && !isUrl(t)),
-      postURLs: targets.filter(isUrl),
+      postURLs: targets.filter((t) => isUrl(t) && /\/video\//.test(t)),
       resultsPerPage: limit,
       shouldDownloadVideos: false,
       shouldDownloadCovers: false,
     }),
-    normalize: (raw, index) => {
+    normalize: (raw, fallback) => {
       const body = text(at(raw, 'text')) ?? '';
       return [item('tiktok', 'post', 'tiktok', {
-        id: idOf(raw, index, 'id', 'webVideoUrl'),
+        id: idOf(raw, fallback, 'id', 'webVideoUrl'),
         url: text(at(raw, 'webVideoUrl')),
         text: body,
         author: text(at(raw, 'authorMeta', 'name'), at(raw, 'authorMeta', 'nickName')),
@@ -235,18 +250,20 @@ export const SOURCES: Record<SourceKey, Source> = {
     actor: 'streamers/youtube-scraper',
     description: 'Videos de canales (URL) o búsquedas: vistas, likes y comentarios.',
     placeholder: 'entrevista candidata, https://www.youtube.com/@canal',
-    input: ({ targets, limit }) => ({
-      searchQueries: targets.filter((t) => !isUrl(t)),
-      startUrls: targets.filter(isUrl).map((url) => ({ url })),
+    accepts: (t) => !isUrl(t) || urlOn(t, 'youtube.com', 'youtu.be'),
+    input: ({ targets, limit, days }) => ({
+      searchQueries: targets.filter((t) => !isUrl(t) && !isHandle(t)),
+      startUrls: [...targets.filter(isUrl), ...targets.filter(isHandle).map((h) => `https://www.youtube.com/@${bare(h)}`)].map((url) => ({ url })),
       maxResults: limit,
+      ...(days ? { dateFilter: days <= 1 ? 'today' : days <= 7 ? 'week' : days <= 31 ? 'month' : 'year' } : {}),
       maxResultsShorts: 0,
       maxResultStreams: 0,
     }),
-    normalize: (raw, index) => {
+    normalize: (raw, fallback) => {
       const title = text(at(raw, 'title'));
       const body = text(at(raw, 'text'), at(raw, 'description')) ?? '';
       return [item('youtube', 'post', 'youtube', {
-        id: idOf(raw, index, 'id', 'url'),
+        id: idOf(raw, fallback, 'id', 'url'),
         url: text(at(raw, 'url')),
         title,
         text: body || (title ?? ''),
@@ -268,21 +285,23 @@ export const SOURCES: Record<SourceKey, Source> = {
     actor: 'apify/google-search-scraper',
     description: 'Resultados orgánicos por búsqueda: qué sitios y en qué posición aparecen al buscar al candidato.',
     placeholder: 'nombre del candidato, candidato + propuesta',
+    accepts: (t) => !isUrl(t),
     input: ({ targets, limit, country, language }) => ({
-      queries: targets.join('\n'),
-      resultsPerPage: Math.min(100, limit),
-      maxPagesPerQuery: 1,
+      queries: targets.map(bare).join('\n'),
+      // Google serves 10 results a page; more results means more pages.
+      resultsPerPage: 10,
+      maxPagesPerQuery: Math.min(10, Math.ceil(limit / 10)),
       countryCode: country,
       languageCode: language,
       mobileResults: false,
       saveHtml: false,
     }),
-    normalize: (raw, index) => {
+    normalize: (raw, fallback) => {
       const query = text(at(raw, 'searchQuery', 'term'));
       return list(at(raw, 'organicResults')).map((result, i) => {
         const url = text(at(result, 'url'));
         return item('google', 'result', 'google', {
-          id: `${query ?? index}#${url ?? i}`,
+          id: `${query ?? fallback}#${url ?? i}`,
           url,
           title: text(at(result, 'title')),
           text: text(at(result, 'description')) ?? '',
@@ -302,18 +321,17 @@ export const SOURCES: Record<SourceKey, Source> = {
     actor: 'lhotanova/google-news-scraper',
     description: 'Notas de prensa en Google Noticias: qué medios publican sobre el candidato y cuándo.',
     placeholder: 'nombre del candidato, partido + tema',
-    input: ({ targets, limit, country, language }) => ({
-      query: targets.join(' OR '),
-      queries: targets,
+    accepts: (t) => !isUrl(t),
+    // Only the fields every Google News actor shares; a language enum it does not know would reject the run.
+    input: ({ targets, limit }) => ({
+      query: targets.map(bare).join(' OR '),
       maxItems: limit,
-      language: `${language}-${country.toUpperCase()}`,
-      country: country.toUpperCase(),
     }),
-    normalize: (raw, index) => {
+    normalize: (raw, fallback) => {
       const url = text(at(raw, 'link'), at(raw, 'url'));
       const title = text(at(raw, 'title'));
       return [item('news', 'article', 'news', {
-        id: idOf(raw, index, 'guid', 'link', 'url', 'title'),
+        id: idOf(raw, fallback, 'guid', 'link', 'url', 'title'),
         url,
         title,
         text: text(at(raw, 'description'), at(raw, 'snippet')) ?? title ?? '',
@@ -328,10 +346,10 @@ export const SOURCES: Record<SourceKey, Source> = {
 /** Every source in the order the app lists them. */
 export const SOURCE_LIST: Source[] = SOURCE_KEYS.map((key) => SOURCES[key]);
 
-/** A dataset as items, each actor's quirks left behind. */
-export function normalizeItems(source: SourceKey, raw: unknown[]): ScrapedItem[] {
+/** A dataset as items, each actor's quirks left behind; `scope` (the run id) keeps id-less items of two runs apart. */
+export function normalizeItems(source: SourceKey, raw: unknown[], scope = ''): ScrapedItem[] {
   const seen = new Set<string>();
-  return raw.flatMap((r, i) => SOURCES[source].normalize(r, i)).filter((i) => (seen.has(i.id) ? false : (seen.add(i.id), true)));
+  return raw.flatMap((r, i) => SOURCES[source].normalize(r, `${scope}#${i}`)).filter((i) => (seen.has(i.id) ? false : (seen.add(i.id), true)));
 }
 
 /** Likes, comments and shares: what a post earned beyond being seen. */

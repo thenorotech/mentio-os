@@ -74,16 +74,22 @@ function toRun(source: SourceKey, raw: unknown): ApifyRun {
     finishedAt: when(at(raw, 'finishedAt')),
     datasetId: text(at(raw, 'defaultDatasetId')),
     storeId: text(at(raw, 'defaultKeyValueStoreId')),
-    items: count(at(raw, 'stats', 'datasetItemCount'), at(raw, 'chargedEventCounts', 'result-item'), at(raw, 'itemCount')),
+    // Runs do not report their item count; `withItemCounts` reads it from the dataset.
+    items: count(at(raw, 'stats', 'datasetItemCount')),
     costUsd: typeof at(raw, 'usageTotalUsd') === 'number' ? count(at(raw, 'usageTotalUsd')) : null,
   };
 }
 
-/** Starts a scrape; Apify runs it in the background. `APIFY_MAX_USD_PER_RUN` caps what one run may charge. */
+/**
+ * Starts a scrape; Apify runs it in the background. `maxItems` stops a
+ * pay-per-result actor at what was asked; `APIFY_MAX_USD_PER_RUN` caps what
+ * a pay-per-event actor may charge.
+ */
 export async function startRun(source: SourceKey, scrape: ScrapeRequest): Promise<ApifyRun> {
+  const query = new URLSearchParams({ maxItems: String(scrape.limit * scrape.targets.length) });
   const cap = Number(process.env.APIFY_MAX_USD_PER_RUN);
-  const query = Number.isFinite(cap) && cap > 0 ? `?maxTotalChargeUsd=${cap}` : '';
-  const body = await request(`/acts/${actorPath(source)}/runs${query}`, { method: 'POST', body: SOURCES[source].input(scrape) });
+  if (Number.isFinite(cap) && cap > 0) query.set('maxTotalChargeUsd', String(cap));
+  const body = await request(`/acts/${actorPath(source)}/runs?${query}`, { method: 'POST', body: SOURCES[source].input(scrape) });
   return toRun(source, at(body, 'data'));
 }
 
@@ -121,7 +127,9 @@ export async function getRun(source: SourceKey, id: string): Promise<ApifyRun | 
   try {
     const [body, expected] = await Promise.all([request(`/actor-runs/${encodeURIComponent(id)}`), actorId(source)]);
     const data = at(body, 'data');
-    return text(at(data, 'actId')) === expected ? toRun(source, data) : null;
+    if (text(at(data, 'actId')) !== expected) return null;
+    const [run] = await withItemCounts([toRun(source, data)]);
+    return run;
   } catch (error) {
     if (isObj(error) && error.apiStatus === 404) return null;
     throw error;
@@ -138,10 +146,28 @@ export async function runInput(run: ApifyRun): Promise<unknown> {
   }
 }
 
-/** A run's raw dataset items, at most `limit`. */
-export async function datasetItems(run: ApifyRun, limit = 1000): Promise<unknown[]> {
+const PAGE = 1000;
+
+/** A run's raw dataset items, page by page, at most `limit`. */
+export async function datasetItems(run: ApifyRun, limit = 5000): Promise<unknown[]> {
   if (!run.datasetId) return [];
-  return list(await request(`/datasets/${encodeURIComponent(run.datasetId)}/items?clean=1&format=json&limit=${limit}`));
+  const items: unknown[] = [];
+  while (items.length < limit) {
+    const size = Math.min(PAGE, limit - items.length);
+    const page = list(await request(`/datasets/${encodeURIComponent(run.datasetId)}/items?clean=1&format=json&offset=${items.length}&limit=${size}`));
+    items.push(...page);
+    if (page.length < size) break;
+  }
+  return items;
+}
+
+/** The runs with their dataset's item count, which the run itself does not carry; a count that fails stays as it was. */
+export async function withItemCounts(runs: ApifyRun[]): Promise<ApifyRun[]> {
+  const counts = await Promise.allSettled(runs.map((r) => (r.datasetId ? request(`/datasets/${encodeURIComponent(r.datasetId)}`) : Promise.resolve(null))));
+  return runs.map((r, i) => {
+    const c = counts[i];
+    return c.status === 'fulfilled' && c.value !== null ? { ...r, items: count(at(c.value, 'data', 'itemCount'), r.items) } : r;
+  });
 }
 
 export async function abortRun(id: string): Promise<void> {
