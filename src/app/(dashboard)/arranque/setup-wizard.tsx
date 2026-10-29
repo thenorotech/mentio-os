@@ -7,23 +7,24 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { SubmitButton } from '@/components/ui/client';
+import { entity } from '@/entity.config';
 
 const STEPS = [
-  { label: 'Tu candidatura', hint: 'El nombre y los apodos con los que la gente te reconoce.' },
-  { label: 'Adversarios', hint: 'A quién quieres comparar en el tablero.' },
+  { label: 'La entidad', hint: 'El nombre oficial y las formas en que la gente la menciona.' },
+  { label: 'Referentes', hint: 'Opcional: otras dependencias u operadores con los que compararla.' },
   { label: 'Temas', hint: 'De qué asuntos quieres seguir la conversación.' },
 ] as const;
 
-const SUGGESTED_TOPICS = ['Seguridad', 'Economía', 'Salud', 'Educación', 'Corrupción', 'Transporte', 'Agua', 'Empleo'];
+const SUGGESTED_TOPICS = entity.topics;
 
 type CompetitorRow = { id: number; name: string };
 
 export function SetupWizard() {
   const [step, setStep] = useState(0);
-  const [candidateName, setCandidateName] = useState('');
+  const [entityName, setEntityName] = useState(entity.name);
   const [competitors, setCompetitors] = useState<CompetitorRow[]>([{ id: 1, name: '' }]);
-  const [campaignName, setCampaignName] = useState('');
-  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const [campaignName, setCampaignName] = useState(entity.shortName);
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([...entity.topics]);
   const [stepError, setStepError] = useState('');
   const percent = Math.round(((step + 1) / STEPS.length) * 100);
   const isLast = step === STEPS.length - 1;
@@ -42,12 +43,8 @@ export function SetupWizard() {
 
   function next() {
     setStepError('');
-    if (step === 0 && !candidateName.trim()) {
-      setStepError('Escribe el nombre del candidato para continuar.');
-      return;
-    }
-    if (step === 1 && !competitors.some((competitor) => competitor.name.trim())) {
-      setStepError('Agrega al menos un adversario con nombre.');
+    if (step === 0 && !entityName.trim()) {
+      setStepError('Escribe el nombre de la entidad para continuar.');
       return;
     }
     setStep((current) => Math.min(current + 1, STEPS.length - 1));
@@ -131,39 +128,39 @@ export function SetupWizard() {
         </CardHeader>
 
         <CardContent className="py-5">
-          <section hidden={step !== 0} aria-labelledby="candidate-step-title" className="grid gap-5">
-            <h3 id="candidate-step-title" className="sr-only">Datos de tu candidatura</h3>
-            <Field label="Nombre del candidato">
-              <Input name="candidateName" value={candidateName} onChange={(event) => setCandidateName(event.target.value)} placeholder="Ej. Andrea López" autoComplete="name" />
+          <section hidden={step !== 0} aria-labelledby="entity-step-title" className="grid gap-5">
+            <h3 id="entity-step-title" className="sr-only">Datos de la entidad</h3>
+            <Field label="Nombre oficial">
+              <Input name="entityName" value={entityName} onChange={(event) => setEntityName(event.target.value)} placeholder={`Ej. ${entity.name}`} />
             </Field>
-            <Field label="Apodos y variantes" hint="Presiona Enter después de cada nombre. Cada variante se seguirá como un término propio.">
-              <TokenInput name="brandVariants" placeholder="Ej. Andrea, Andy López" max={20} />
+            <Field label="Siglas y variantes" hint="Presiona Enter después de cada nombre. Cada variante se seguirá como un término propio.">
+              <TokenInput name="brandVariants" defaultValue={entity.aliases} placeholder="Ej. Puentes Fronterizos, FPFCH" max={20} />
             </Field>
-            <Field label="Nombre de campaña (opcional)" hint={`Si lo dejas vacío, usaremos “Campaña de ${candidateName.trim() || 'tu candidato'}”.`}>
-              <Input name="campaignName" value={campaignName} onChange={(event) => setCampaignName(event.target.value)} placeholder="Ej. Andrea López 2027" />
+            <Field label="Nombre del monitoreo (opcional)" hint={`Si lo dejas vacío, usaremos “${entityName.trim() || 'la entidad'}”.`}>
+              <Input name="campaignName" value={campaignName} onChange={(event) => setCampaignName(event.target.value)} placeholder={`Ej. ${entity.shortName}`} />
             </Field>
           </section>
 
           <section hidden={step !== 1} aria-labelledby="competitors-step-title" className="grid gap-3">
-            <h3 id="competitors-step-title" className="sr-only">Adversarios</h3>
+            <h3 id="competitors-step-title" className="sr-only">Referentes</h3>
             <ul className="grid gap-3">
               {competitors.map((competitor, index) => (
                 <li key={competitor.id} className="grid gap-4 rounded-lg border bg-muted/20 p-4">
                   <input type="hidden" name="competitorIds" value={competitor.id} />
                   <div className="flex min-h-7 items-center justify-between gap-3">
-                    <p className="text-sm font-medium">Adversario {index + 1}</p>
+                    <p className="text-sm font-medium">Referente {index + 1}</p>
                     {competitors.length > 1 ? (
-                      <Button type="button" variant="ghost" size="icon-sm" aria-label={`Quitar adversario ${index + 1}${competitor.name.trim() ? `: ${competitor.name.trim()}` : ''}`} onClick={() => removeCompetitor(competitor.id)}>
+                      <Button type="button" variant="ghost" size="icon-sm" aria-label={`Quitar referente ${index + 1}${competitor.name.trim() ? `: ${competitor.name.trim()}` : ''}`} onClick={() => removeCompetitor(competitor.id)}>
                         <X aria-hidden="true" />
                       </Button>
                     ) : null}
                   </div>
                   <div className="grid gap-4 @xl:grid-cols-2">
                     <Field label="Nombre">
-                      <Input name={`competitorName_${competitor.id}`} value={competitor.name} onChange={(event) => updateCompetitor(competitor.id, event.target.value)} placeholder="Ej. Carlos Ramírez" />
+                      <Input name={`competitorName_${competitor.id}`} value={competitor.name} onChange={(event) => updateCompetitor(competitor.id, event.target.value)} placeholder="Ej. Aduana de Ciudad Juárez" />
                     </Field>
                     <Field label="Apodos y variantes">
-                      <TokenInput name={`competitorVariants_${competitor.id}`} placeholder="Ej. Carlos, Charly Ramírez" max={10} />
+                      <TokenInput name={`competitorVariants_${competitor.id}`} placeholder="Ej. ANAM Juárez" max={10} />
                     </Field>
                   </div>
                 </li>
@@ -171,9 +168,9 @@ export function SetupWizard() {
             </ul>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <Button type="button" variant="outline" size="sm" onClick={addCompetitor} disabled={competitors.length >= 10}>
-                <Plus aria-hidden="true" /> Agregar adversario
+                <Plus aria-hidden="true" /> Agregar referente
               </Button>
-              <p className="text-xs text-muted-foreground tabular-nums">{competitors.length} de 10 adversarios</p>
+              <p className="text-xs text-muted-foreground tabular-nums">{competitors.length} de 10 referentes</p>
             </div>
           </section>
 
@@ -197,11 +194,11 @@ export function SetupWizard() {
             </Field>
             {selectedTopics.map((topic) => <input key={topic} type="hidden" name="suggestedTopics" value={topic} />)}
             <Field label="Otros temas" hint="Opcional. Puedes escribir varios y presionar Enter después de cada uno.">
-              <TokenInput name="freeTopics" placeholder="Ej. Obras públicas" max={20} />
+              <TokenInput name="freeTopics" placeholder="Ej. Puente Lerdo" max={20} />
             </Field>
             <p className="flex items-start gap-2 rounded-lg bg-muted/60 px-3 py-2.5 text-xs text-pretty text-muted-foreground">
               <Info aria-hidden className="mt-px size-3.5 shrink-0" />
-              Al terminar crearemos una campaña con el candidato, sus adversarios y los temas que elegiste. Cada nombre o variante será un término de seguimiento.
+              Al terminar crearemos un monitoreo con la entidad, sus referentes y los temas que elegiste. Cada nombre o variante será un término de seguimiento.
             </p>
           </section>
 

@@ -1,7 +1,8 @@
 import Link from 'next/link';
-import { ArrowRight, Bell, ChartNoAxesColumnIncreasing, CircleCheck, GitCompareArrows, ListChecks } from 'lucide-react';
+import { ArrowRight, Bell, ChartNoAxesColumnIncreasing, CircleCheck, Radio, ListChecks } from 'lucide-react';
 import { LinkButton, PageHeader, SectionHeading, TONE_TEXT, cx } from '@/components/ui';
 import { ActionForm } from '@/components/ui/client';
+import { entity } from '@/entity.config';
 import { startCampaignAction } from './actions';
 import { SetupWizard } from './setup-wizard';
 
@@ -10,8 +11,8 @@ export const metadata = { title: 'Arranque' };
 
 const NEXT_STEPS = [
   { title: 'Configura tu alerta de crisis', description: 'Recibe un aviso inmediato cuando aparezcan menciones negativas.', href: '/alerts/plantillas', icon: Bell },
-  { title: 'Revisa tu semáforo', description: 'Mira el tono y el volumen de la conversación sobre tu candidatura.', href: '/', icon: ChartNoAxesColumnIncreasing },
-  { title: 'Compara contra adversarios', description: 'Explora el desempeño de tu candidatura frente a otras.', href: '/contienda', icon: GitCompareArrows },
+  { title: 'Revisa tu semáforo', description: 'Mira el tono y el volumen de la conversación sobre la entidad.', href: '/', icon: ChartNoAxesColumnIncreasing },
+  { title: 'Recolecta sus posts', description: 'Busca en redes y noticias las publicaciones que mencionan a la entidad.', href: '/redes', icon: Radio },
 ];
 
 export default async function Arranque({ searchParams }: { searchParams: Promise<{ completado?: string }> }) {
@@ -61,7 +62,7 @@ export default async function Arranque({ searchParams }: { searchParams: Promise
 
   return (
     <div className="mx-auto grid max-w-3xl">
-      <PageHeader title="Prepara tu tablero" description="En tres pasos, reúne los nombres y temas que quieres seguir. Puedes cambiarlos después." />
+      <PageHeader title="Prepara tu tablero" description={`Ya cargamos los nombres y temas de ${entity.shortName}. Revísalos en tres pasos; puedes cambiarlos después.`} />
       <ActionForm action={startCampaignAction}>
         <SetupWizard />
       </ActionForm>

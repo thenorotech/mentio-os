@@ -113,7 +113,7 @@ export const SOURCES: Record<SourceKey, Source> = {
     kind: 'post',
     actor: 'apify/instagram-scraper',
     description: 'Publicaciones de perfiles (@usuario) y hashtags (#tema): likes, comentarios y reproducciones.',
-    placeholder: '@candidata, #seguridad, https://www.instagram.com/…',
+    placeholder: '#PuentesFronterizos, @cuenta, https://www.instagram.com/…',
     accepts: (t) => isHandle(t) || isTag(t) || urlOn(t, 'instagram.com'),
     input: ({ targets, limit, days }) => ({
       directUrls: targets.map((t) => (isUrl(t) ? t : isTag(t) ? `https://www.instagram.com/explore/tags/${encodeURIComponent(bare(t))}/` : `https://www.instagram.com/${bare(t)}/`)),
@@ -176,7 +176,7 @@ export const SOURCES: Record<SourceKey, Source> = {
     kind: 'post',
     actor: 'apidojo/tweet-scraper',
     description: 'Posts de cuentas (@usuario) o búsquedas: likes, respuestas, reposts, citas y vistas.',
-    placeholder: '@candidata, "propuesta de seguridad", #debate',
+    placeholder: '"Puentes Fronterizos de Chihuahua", #PuentesFronterizos',
     accepts: (t) => !isUrl(t) || urlOn(t, 'x.com', 'twitter.com'),
     input: ({ targets, limit, days }) => {
       const since = days ? ` since:${isoDay(days)}` : '';
@@ -213,7 +213,7 @@ export const SOURCES: Record<SourceKey, Source> = {
     kind: 'post',
     actor: 'clockworks/tiktok-scraper',
     description: 'Videos de perfiles (@usuario), hashtags (#tema) o búsquedas: reproducciones, likes, comentarios y compartidos.',
-    placeholder: '@candidata, #elecciones, debate presidencial',
+    placeholder: '#PuentesFronterizos, puente Zaragoza',
     accepts: (t) => !isUrl(t) || urlOn(t, 'tiktok.com'),
     input: ({ targets, limit }) => ({
       // A profile URL (tiktok.com/@user) is a profile; a /video/ URL is a post.
@@ -249,7 +249,7 @@ export const SOURCES: Record<SourceKey, Source> = {
     kind: 'post',
     actor: 'streamers/youtube-scraper',
     description: 'Videos de canales (URL) o búsquedas: vistas, likes y comentarios.',
-    placeholder: 'entrevista candidata, https://www.youtube.com/@canal',
+    placeholder: 'Puentes Fronterizos Chihuahua, https://www.youtube.com/@canal',
     accepts: (t) => !isUrl(t) || urlOn(t, 'youtube.com', 'youtu.be'),
     input: ({ targets, limit, days }) => ({
       searchQueries: targets.filter((t) => !isUrl(t) && !isHandle(t)),
@@ -283,8 +283,8 @@ export const SOURCES: Record<SourceKey, Source> = {
     platform: 'google',
     kind: 'result',
     actor: 'apify/google-search-scraper',
-    description: 'Resultados orgánicos por búsqueda: qué sitios y en qué posición aparecen al buscar al candidato.',
-    placeholder: 'nombre del candidato, candidato + propuesta',
+    description: 'Resultados orgánicos por búsqueda: qué sitios y en qué posición aparecen al buscar a la entidad.',
+    placeholder: 'Puentes Fronterizos de Chihuahua, peaje puente Zaragoza',
     accepts: (t) => !isUrl(t),
     input: ({ targets, limit, country, language }) => ({
       queries: targets.map(bare).join('\n'),
@@ -319,8 +319,8 @@ export const SOURCES: Record<SourceKey, Source> = {
     platform: 'news',
     kind: 'article',
     actor: 'lhotanova/google-news-scraper',
-    description: 'Notas de prensa en Google Noticias: qué medios publican sobre el candidato y cuándo.',
-    placeholder: 'nombre del candidato, partido + tema',
+    description: 'Notas de prensa en Google Noticias: qué medios publican sobre la entidad y cuándo.',
+    placeholder: 'Fideicomiso de Puentes Fronterizos, tiempos de espera',
     accepts: (t) => !isUrl(t),
     // Only the fields every Google News actor shares; a language enum it does not know would reject the run.
     input: ({ targets, limit }) => ({

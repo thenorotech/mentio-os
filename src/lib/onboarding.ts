@@ -28,7 +28,7 @@ export type SetupStatus = 'done' | 'current' | 'todo' | 'blocked';
 export type SetupStep = {
   key: SetupStepKey;
   status: SetupStatus;
-  /** What is already configured, as short facts ("2 adversarios"). */
+  /** What is already configured, as short facts ("3 temas"). */
   facts: string[];
 };
 
@@ -38,7 +38,7 @@ function isDone(key: SetupStepKey, s: SetupSignals): boolean {
   switch (key) {
     case 'conexiones': return s.mentio && s.apify;
     case 'candidatura': return s.brands > 0;
-    case 'contraste': return s.competitors > 0 && s.topics > 0;
+    case 'contraste': return s.topics > 0;
     case 'perfiles': return s.profiles > 0;
     case 'eventos': return s.events > 0;
     case 'avisos': return s.channels > 0 && s.alerts > 0;
@@ -55,8 +55,8 @@ function isBlocked(key: SetupStepKey, s: SetupSignals): boolean {
 function factsOf(key: SetupStepKey, s: SetupSignals): string[] {
   switch (key) {
     case 'conexiones': return [s.mentio ? 'Mentio conectado' : 'Mentio sin conexión', s.apify ? 'Apify conectado' : 'Apify sin token'];
-    case 'candidatura': return s.brands ? [plural(s.brands, 'frase del candidato', 'frases del candidato')] : [];
-    case 'contraste': return [plural(s.competitors, 'frase de adversario', 'frases de adversarios'), plural(s.topics, 'tema', 'temas')].filter((_, i) => (i ? s.topics : s.competitors) > 0);
+    case 'candidatura': return s.brands ? [plural(s.brands, 'frase de la entidad', 'frases de la entidad')] : [];
+    case 'contraste': return [plural(s.competitors, 'frase de referente', 'frases de referentes'), plural(s.topics, 'tema', 'temas')].filter((_, i) => (i ? s.topics : s.competitors) > 0);
     case 'perfiles': return s.profiles ? [plural(s.profiles, 'perfil recolectado', 'perfiles recolectados')] : [];
     case 'eventos': return s.events ? [plural(s.events, 'evento o búsqueda', 'eventos y búsquedas')] : [];
     case 'avisos': return [plural(s.channels, 'canal', 'canales'), plural(s.alerts, 'alerta', 'alertas')].filter((_, i) => (i ? s.alerts : s.channels) > 0);

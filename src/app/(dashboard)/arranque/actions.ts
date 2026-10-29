@@ -24,12 +24,12 @@ function uniqueTerms(terms: CampaignKeyword[]) {
 
 export async function startCampaignAction(_: ActionState, form: FormData): Promise<ActionState> {
   return run(async () => {
-    const candidate = str(form, 'candidateName');
-    if (!candidate) throw new Error('Escribe el nombre del candidato para continuar.');
+    const entityName = str(form, 'entityName');
+    if (!entityName) throw new Error('Escribe el nombre de la entidad para continuar.');
 
     const terms: CampaignKeyword[] = [
-      { term: candidate, kind: 'brand' },
-      ...lines(form, 'brandVariants').map((term) => ({ term, kind: 'brand' as const, context: `Variante de: ${candidate}` })),
+      { term: entityName, kind: 'brand' },
+      ...lines(form, 'brandVariants').map((term) => ({ term, kind: 'brand' as const, context: `Variante de: ${entityName}` })),
     ];
 
     const competitorIds = list(form, 'competitorIds');
@@ -41,14 +41,13 @@ export async function startCampaignAction(_: ActionState, form: FormData): Promi
         ...lines(form, `competitorVariants_${id}`).map((term) => ({ term, kind: 'competitor' as const, context: `Variante de: ${name}` })),
       ];
     });
-    if (competitors.length === 0) throw new Error('Agrega al menos un adversario con nombre.');
     terms.push(...competitors);
 
     const topicTerms = [...lines(form, 'suggestedTopics'), ...lines(form, 'freeTopics')].map((term) => ({ term, kind: 'topic' as const }));
     terms.push(...topicTerms);
     const checkedTerms = uniqueTerms(terms);
 
-    const campaignName = str(form, 'campaignName') || `Campaña de ${candidate}`;
+    const campaignName = str(form, 'campaignName') || entityName;
     const group = unwrap(await mentio().createGroup({ body: { name: campaignName } }));
     let created = 0;
     let failed: string | null = null;
@@ -64,7 +63,7 @@ export async function startCampaignAction(_: ActionState, form: FormData): Promi
     }
 
     if (failed) {
-      throw new Error(`La campaña se creó, pero solo se registraron ${created} de ${checkedTerms.length} términos. No se pudo agregar “${failed}”; revisa la campaña antes de volver a intentarlo.`);
+      throw new Error(`El monitoreo se creó, pero solo se registraron ${created} de ${checkedTerms.length} términos. No se pudo agregar “${failed}”; revísalo antes de volver a intentarlo.`);
     }
 
     revalidatePath('/');

@@ -4,6 +4,7 @@ import { Badge, Field, Input, Notice, PlatformPicker, Segmented, TokenInput, typ
 import { ActionForm, DrawerButton, SubmitButton } from '@/components/ui/client';
 import type { RunStatus } from '@/lib/apify';
 import { SOURCE_KEYS, SOURCE_LIST, type SourceKey } from '@/lib/scraping/sources';
+import { entity } from '@/entity.config';
 import { startScrapeAction } from './actions';
 
 export function ApifySetup() {
@@ -43,19 +44,19 @@ export function RunStatusBadge({ status }: { status: RunStatus }) {
 
 const SOURCE_LABELS = Object.fromEntries(SOURCE_LIST.map((s) => [s.key, s.label]));
 
-type ScrapePreset = { label?: string; sources?: readonly SourceKey[]; placeholder?: string };
+type ScrapePreset = { label?: string; sources?: readonly SourceKey[]; targets?: readonly string[]; placeholder?: string };
 
-/** The page's create action: one Apify run per chosen source, same targets. A preset opens it for profiles or events (the setup guide). */
+/** The page's create action: one Apify run per chosen source, same targets, prefilled with the entity's post searches. A preset opens it for profiles or events (the setup guide). */
 export function NewScrapeButton({ primary = true, preset = {} }: { primary?: boolean; preset?: ScrapePreset }) {
   const label = preset.label ?? 'Nueva recolección';
   return (
     <DrawerButton create={primary} variant={primary ? 'primary' : 'secondary'} label={label} icon={<Plus />} title={label} description="Apify recolecta en segundo plano; los resultados aparecen en el panorama al terminar.">
       <ActionForm action={startScrapeAction} className="grid gap-5">
         <Field label="Fuentes" group hint="Redes por cuenta, hashtag o búsqueda; YouTube por búsqueda o canal; Google y Noticias por búsqueda. Cada fuente es una corrida de Apify.">
-          <PlatformPicker name="sources" options={SOURCE_KEYS} defaultValue={preset.sources ?? ['instagram', 'facebook', 'x', 'tiktok']} labels={SOURCE_LABELS} />
+          <PlatformPicker name="sources" options={SOURCE_KEYS} defaultValue={preset.sources ?? ['x', 'tiktok', 'instagram', 'youtube', 'news']} labels={SOURCE_LABELS} />
         </Field>
         <Field label="Qué recolectar" hint="@cuenta para perfiles, #tema para hashtags, texto para búsquedas, o una URL. Enter agrega cada uno.">
-          <TokenInput name="targets" placeholder={preset.placeholder ?? '@candidata, #seguridad, “propuesta de agua”'} max={20} splitOnComma={false} />
+          <TokenInput name="targets" defaultValue={preset.targets ?? entity.searches} placeholder={preset.placeholder ?? '#PuentesFronterizos, “Puente Zaragoza”, @cuenta'} max={20} splitOnComma={false} />
         </Field>
         <Field label="Resultados por objetivo" hint="Por cada cuenta, hashtag o búsqueda, en cada fuente. Más resultados cuestan más créditos de Apify.">
           <Input name="limit" type="number" min={1} max={500} defaultValue={50} required />

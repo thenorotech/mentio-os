@@ -10,5 +10,5 @@ export const brand = {
   /** Any CSS color. */
   accent: '#1421b9',
   /** One line under the name in the browser tab. */
-  description: 'Inteligencia política: lo que se dice de tus candidatos, medido y priorizado.',
+  description: 'Lo que se dice de Puentes Fronterizos de Chihuahua, medido y priorizado.',
 };

@@ -7,6 +7,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { ArrowRight, Bell, Check, ChevronDown, ChevronRight, Hash, Lock, PlugZap, Swords, UserRound, UsersRound, type LucideIcon } from 'lucide-react';
+import { entity } from '@/entity.config';
 import { NewScrapeButton } from '@/app/(dashboard)/redes/parts';
 import { Badge, LinkButton, cx, type Tone } from '@/components/ui';
 import type { SetupSignals, SetupStatus, SetupStep, SetupStepKey } from '@/lib/onboarding';
@@ -38,23 +39,23 @@ const STEPS: Record<SetupStepKey, StepCopy> = {
     action: () => null,
   },
   candidatura: {
-    title: 'Frases de tu candidatura',
+    title: 'Frases de la entidad',
     icon: UserRound,
-    summary: 'El nombre, apodos y variantes con los que la gente nombra a tu candidato. Cada una es una frase que Mentio rastrea.',
+    summary: 'El nombre oficial, siglas y variantes con los que la gente nombra a la entidad. Cada una es una frase que Mentio rastrea.',
     where: ['Configuración', 'Asistente de arranque'],
     how: [
-      'El asistente crea la campaña y una frase por nombre o variante.',
-      'Después se editan en Campaña › Candidatos y temas.',
+      'El asistente crea el monitoreo y una frase por nombre o variante.',
+      'Después se editan en Monitoreo › Entidad y temas.',
     ],
     action: (primary, s) => (s.brands
       ? <LinkButton href="/keywords" variant={variant(primary)}>Ver frases <ArrowRight /></LinkButton>
       : <LinkButton href="/arranque" variant={variant(primary)} create={primary}>Abrir asistente <ArrowRight /></LinkButton>),
   },
   contraste: {
-    title: 'Adversarios y temas',
+    title: 'Temas y referentes',
     icon: Swords,
-    summary: 'A quién comparar y de qué asuntos seguir la conversación: frases de adversario y de tema.',
-    where: ['Campaña', 'Candidatos y temas', 'Nuevo'],
+    summary: 'De qué asuntos seguir la conversación y, si quieres, con quién comparar: frases de tema y de referente.',
+    where: ['Monitoreo', 'Entidad y temas', 'Nuevo'],
     how: [
       'Tipo “Adversario” para medir participación de voz en Cara a cara.',
       'Tipo “Tema” para el Mapa de temas y los voceros de cada asunto.',
@@ -64,7 +65,7 @@ const STEPS: Record<SetupStepKey, StepCopy> = {
   perfiles: {
     title: 'Perfiles en redes',
     icon: UsersRound,
-    summary: 'Las cuentas que Apify recorre en Instagram, Facebook, X, TikTok y YouTube: tu candidato, adversarios y voceros.',
+    summary: 'Las cuentas que Apify recorre en Instagram, Facebook, X, TikTok y YouTube: la entidad, sus voceros y medios locales.',
     where: ['Redes y web', 'Panorama', 'Nueva recolección'],
     how: [
       'Escribe @cuenta o pega la URL del perfil; cada fuente toma solo lo que acepta.',
@@ -74,24 +75,24 @@ const STEPS: Record<SetupStepKey, StepCopy> = {
     action: (primary) => (
       <NewScrapeButton
         primary={primary}
-        preset={{ label: 'Recolectar perfiles', sources: ['instagram', 'facebook', 'x', 'tiktok', 'youtube'], placeholder: '@candidata, @adversario, https://www.instagram.com/…' }}
+        preset={{ label: 'Recolectar perfiles', sources: ['instagram', 'facebook', 'x', 'tiktok', 'youtube'], targets: [], placeholder: '@cuenta_oficial, https://www.facebook.com/…' }}
       />
     ),
   },
   eventos: {
     title: 'Eventos y búsquedas',
     icon: Hash,
-    summary: 'Debates, mítines, crisis o propuestas: hashtags y frases que Apify busca en redes, Google y noticias.',
+    summary: 'Cierres, obras, tarifas o filas en los cruces: hashtags y frases que Apify busca en redes, Google y noticias.',
     where: ['Redes y web', 'Panorama', 'Nueva recolección'],
     how: [
-      '#hashtag para redes; texto libre (“debate Monterrey”) para Google, Noticias y X.',
+      '#hashtag para redes; texto libre (“Puente Zaragoza”) para Google, Noticias y X.',
       'Elige el periodo (24 h, 7 o 30 días) para acotar el evento.',
       'Consulta cada corrida y expórtala en Redes y web › Recolecciones.',
     ],
     action: (primary) => (
       <NewScrapeButton
         primary={primary}
-        preset={{ label: 'Recolectar evento', sources: ['x', 'tiktok', 'google', 'news'], placeholder: '#DebateNL, “propuesta de agua”, “mitin Monterrey”' }}
+        preset={{ label: 'Recolectar evento', sources: ['x', 'tiktok', 'google', 'news'], targets: entity.searches, placeholder: '#PuentesFronterizos, “Puente Zaragoza”' }}
       />
     ),
   },
@@ -102,7 +103,7 @@ const STEPS: Record<SetupStepKey, StepCopy> = {
     where: ['Avisos', 'Canales', 'Alertas'],
     how: [
       'Primero un canal: es el destino de cada aviso.',
-      'Después una plantilla: crisis, resumen diario o adversarios.',
+      'Después una plantilla: crisis o resumen diario.',
     ],
     action: (primary, s) => (s.channels
       ? <LinkButton href="/alerts/plantillas" variant={variant(primary)} create={primary}>Crear alerta <ArrowRight /></LinkButton>
