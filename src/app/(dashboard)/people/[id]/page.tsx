@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ExternalLink } from 'lucide-react';
 import { ActionForm, SubmitButton } from '@/components/ui/client';
 import { Badge, Card, DateTimePicker, EmptyState, Field, Input, LinkButton, PageHeader, Select, Stat, Textarea, buttonClass, sentimentTone, SwitchRow, KpiStrip } from '@/components/ui';
 import { InfoTip } from '@/components/info-tip';
@@ -37,26 +38,33 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
       <PageHeader
         back={{ href: '/people', label: 'Audiencia' }}
         title={
-          <span className="flex items-center gap-3">
-            <Avatar person={person} size="size-10" />
-            <span className="min-w-0">
-              <span className="flex items-center gap-1 truncate">{displayName(person)} <InfoTip term="autor" /></span>
-              <span className="block text-sm font-normal text-muted-foreground">
-                {[person.handle, platformName(person.platform)].filter(Boolean).join(' · ')}
-              </span>
-            </span>
+          <span className="flex min-w-0 items-center gap-3">
+            <Avatar person={person} size="size-9" />
+            <span className="min-w-0 truncate">{displayName(person)}</span>
+            <InfoTip term="autor" />
+          </span>
+        }
+        description={
+          <span className="inline-flex flex-wrap items-center gap-x-1.5 gap-y-1">
+            <span>{[person.handle, platformName(person.platform)].filter(Boolean).join(' · ')}</span>
+            <Badge tone="accent">{stageName(outreach.stage)}</Badge>
+            {annotations.muted ? <Badge tone="warn">Silenciado</Badge> : null}
           </span>
         }
         actions={
           <>
-            {annotations.muted ? <Badge tone="warn">Silenciado</Badge> : null}
-            <Badge tone="accent">{stageName(outreach.stage)}</Badge>
-            {person.url ? <a href={person.url} target="_blank" rel="noreferrer" className={buttonClass('secondary')}>Ver perfil ↗</a> : null}
+            {person.url ? (
+              <a href={person.url} target="_blank" rel="noreferrer" className={buttonClass('secondary')}>
+                <ExternalLink aria-hidden /> Ver perfil
+                <span className="sr-only">(se abre en otra pestaña)</span>
+              </a>
+            ) : null}
+            <LinkButton href={`/mentions?personId=${person.id}`} variant="primary">Ver menciones</LinkButton>
           </>
         }
       />
 
-      <KpiStrip>
+      <KpiStrip label="Resumen del autor">
         <Stat label={<span className="inline-flex items-center gap-1">Seguidores <InfoTip term="alcance" /></span>} value={reach.followers === null ? '?' : compact(reach.followers)} hint={reach.posts !== null ? `${compact(reach.posts)} publicaciones` : undefined} />
         <Stat label={<span className="inline-flex items-center gap-1">Menciones <InfoTip term="menciones" /></span>} value={stats.mentions} hint={`${stats.relevant} relevantes`} />
         <Stat label={<span className="inline-flex items-center gap-1">Primera actividad <InfoTip text="Fecha de la primera mención que se registró para este autor." /></span>} value={<span className="text-base">{timeAgo(stats.firstSeenAt)}</span>} hint={date(stats.firstSeenAt)} />
@@ -72,8 +80,8 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
         <div className="min-w-0 space-y-6">
           <Card title="Perfil público" description={profile ? `Consultado ${timeAgo(profile.fetchedAt)}` : 'Aún no se ha consultado.'}>
             {profile ? (
-              <dl className="grid gap-x-6 gap-y-3 text-sm @lg:grid-cols-2">
-                {profile.bio ? <div className="@lg:col-span-2"><dt className="text-xs text-muted-foreground">Biografía</dt><dd className="whitespace-pre-line">{profile.bio}</dd></div> : null}
+              <dl className="grid gap-x-6 gap-y-4 text-sm @lg:grid-cols-2">
+                {profile.bio ? <div className="@lg:col-span-2"><dt className="text-xs text-muted-foreground">Biografía</dt><dd className="mt-0.5 text-pretty whitespace-pre-line">{profile.bio}</dd></div> : null}
                 <Fact label="Organización" value={profile.company} />
                 <Fact label="Ubicación" value={profile.location} />
                 <Fact label="Sitio web" value={profile.website} href={profile.website ? (profile.website.startsWith('http') ? profile.website : `https://${profile.website}`) : null} />
@@ -81,9 +89,12 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
                 {profile.links.length ? (
                   <div className="@lg:col-span-2">
                     <dt className="text-xs text-muted-foreground">Cuentas vinculadas</dt>
-                    <dd className="mt-1 flex flex-wrap gap-2">
+                    <dd className="mt-1 flex flex-wrap gap-1.5">
                       {profile.links.map((l) => (
-                        <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className="text-primary hover:underline">{tagName(l.provider)}</a>
+                        <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className={buttonClass('secondary', 'sm', 'h-7 px-2 text-xs')}>
+                          {tagName(l.provider)} <ExternalLink aria-hidden className="size-3" />
+                          <span className="sr-only">(se abre en otra pestaña)</span>
+                        </a>
                       ))}
                     </dd>
                   </div>
@@ -92,26 +103,31 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
             ) : (
               <p className="text-sm text-muted-foreground">Los datos del perfil aparecen cuando se consulta al autor en su canal.</p>
             )}
-            <div className="mt-4 border-t border-line pt-3">
+            <div className="mt-4 border-t pt-4">
               <p className="mb-1.5 inline-flex items-center gap-1 text-xs text-muted-foreground">Sentimiento de sus menciones <InfoTip term="sentimiento o tono" /></p>
               <SentimentBar sentiment={stats.sentiment} className="h-2 w-full" />
-              <p className="mt-1.5 text-xs text-muted-foreground">
+              <p className="mt-1.5 text-xs text-muted-foreground tabular-nums">
                 {stats.sentiment.positive} positivo · {stats.sentiment.neutral} neutral · {stats.sentiment.negative} negativo
               </p>
             </div>
           </Card>
 
           <Card title="Cuentas" description="Cuentas agrupadas bajo este autor. La primera es la principal.">
-            <ul className="divide-y divide-line text-sm">
+            <ul className="divide-y text-sm">
               {person.accounts.map((account, i) => (
-                <li key={account.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                  <span className="min-w-0">
+                <li key={account.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5 first:pt-0 last:pb-0">
+                  <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
                     <span className="font-medium">{account.name ?? account.handle ?? account.id}</span>
-                    <span className="ml-2 text-xs text-muted-foreground">{[account.handle, platformName(account.platform)].filter(Boolean).join(' · ')}</span>
-                    {i === 0 ? <Badge className="ml-2">Principal</Badge> : null}
+                    <span className="text-xs text-muted-foreground">{[account.handle, platformName(account.platform)].filter(Boolean).join(' · ')}</span>
+                    {i === 0 ? <Badge tone="accent">Principal</Badge> : null}
                   </span>
-                  <span className="flex items-center gap-2">
-                    {account.url ? <a href={account.url} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">Abrir ↗</a> : null}
+                  <span className="flex items-center gap-1.5">
+                    {account.url ? (
+                      <a href={account.url} target="_blank" rel="noreferrer" className={buttonClass('ghost', 'sm')}>
+                        Abrir <ExternalLink aria-hidden />
+                        <span className="sr-only">{account.name ?? account.handle ?? 'la cuenta'} (se abre en otra pestaña)</span>
+                      </a>
+                    ) : null}
                     {i > 0 ? (
                       <ActionForm action={splitAccount}>
                         <input type="hidden" name="id" value={person.id} />
@@ -125,23 +141,28 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
             </ul>
           </Card>
 
-          <Card title="Menciones recientes" actions={<Link href={`/mentions?personId=${person.id}`} className="text-xs text-primary hover:underline">Ver todas</Link>}>
+          <Card title="Menciones recientes" actions={<Link href={`/mentions?personId=${person.id}`} className="rounded-sm text-primary hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none">Ver todas</Link>}>
             {mentions.data.length === 0 ? (
-              <EmptyState compact title="Aún no hay menciones de esta persona" example="Cuando esta autora publique sobre “María López” o “seguridad”, la conversación aparecerá aquí." action={<LinkButton href="/keywords/new" variant="primary" size="sm">Agregar término a la campaña</LinkButton>}>Las menciones se muestran cuando coinciden con algún término monitoreado.</EmptyState>
+              <EmptyState compact title="Aún no hay menciones de esta persona" example="Cuando esta autora publique sobre “María López” o “seguridad”, la conversación aparecerá aquí." action={<LinkButton href="/keywords/new" size="sm">Agregar término a la campaña</LinkButton>}>Las menciones se muestran cuando coinciden con algún término monitoreado.</EmptyState>
             ) : (
-              <ul className="divide-y divide-line">
+              <ul className="-mx-2 divide-y">
                 {mentions.data.map((m) => (
-                  <li key={m.id} className="py-2.5 first:pt-0 last:pb-0">
-                    <Link href={`/mentions/${m.id}`} className="block rounded hover:bg-muted/50">
+                  <li key={m.id} className="py-1 first:pt-0 last:pb-0">
+                    <Link href={`/mentions/${m.id}`} className="block rounded-lg px-2 py-1.5 transition-colors hover:bg-muted/50 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none">
                       <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                         <span>{platformName(m.post.platform)}</span>
-                        <span>·</span>
+                        <span aria-hidden>·</span>
                         <span>{m.keyword.term}</span>
-                        <span>·</span>
+                        <span aria-hidden>·</span>
                         <span>{timeAgo(m.post.publishedAt)}</span>
                         {m.classification ? <Badge tone={sentimentTone(m.classification.sentiment)}>{{ positive: 'Positivo', neutral: 'Neutral', negative: 'Negativo' }[m.classification.sentiment]}</Badge> : null}
                         {m.relevant ? <Badge tone="accent">Relevante</Badge> : null}
-                        {m.review ? <Badge>{'★'.repeat(m.review.rating)}</Badge> : null}
+                        {m.review ? (
+                          <Badge tone="warn">
+                            <span aria-hidden>{'★'.repeat(m.review.rating)}</span>
+                            <span className="sr-only">{m.review.rating} estrellas</span>
+                          </Badge>
+                        ) : null}
                       </div>
                       <p className="mt-1 text-sm text-foreground">{excerpt(m.post.text) || <span className="text-muted-foreground">Sin texto</span>}</p>
                     </Link>
@@ -174,7 +195,9 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
                 <Textarea name="notes" maxLength={2000} defaultValue={annotations.notes} />
               </Field>
               <SwitchRow name="muted" defaultChecked={annotations.muted} label="Silenciar autor" hint="Oculta sus publicaciones del listado en todos los canales." />
-              <SubmitButton>Guardar</SubmitButton>
+              <div className="flex justify-end">
+                <SubmitButton variant="secondary" size="sm">Guardar</SubmitButton>
+              </div>
             </ActionForm>
           </Card>
 
@@ -192,15 +215,17 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
               <Field label="Nota">
                 <Textarea name="note" rows={2} maxLength={2000} placeholder="Qué se envió o conversó" />
               </Field>
-              <SubmitButton>Registrar contacto</SubmitButton>
+              <div className="flex justify-end">
+                <SubmitButton variant="secondary" size="sm">Registrar contacto</SubmitButton>
+              </div>
             </ActionForm>
             {activities.data.length ? (
-              <ul className="mt-4 divide-y divide-line border-t border-line text-sm">
+              <ul aria-label="Contactos registrados" className="mt-4 divide-y border-t text-sm">
                 {activities.data.map((a) => (
                   <li key={a.id} className="flex items-start justify-between gap-2 py-2.5">
                     <div className="min-w-0">
                       <p className="text-xs text-muted-foreground">
-                        <span className="font-medium text-foreground/80">{CHANNEL_NAMES[a.channel]}</span> · {date(a.occurredAt)}
+                        <span className="font-medium text-foreground">{CHANNEL_NAMES[a.channel]}</span> · {date(a.occurredAt)}
                         {a.member ? ` · ${a.member.name ?? a.member.email}` : ''}
                       </p>
                       {a.note ? <p className="mt-0.5 whitespace-pre-line">{a.note}</p> : null}
@@ -214,37 +239,37 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
                 ))}
               </ul>
             ) : (
-              <p className="mt-4 border-t border-line pt-3 text-sm text-muted-foreground">Aún no hay contactos registrados.</p>
+              <p className="mt-4 border-t pt-4 text-sm text-muted-foreground">Aún no hay contactos registrados.</p>
             )}
           </Card>
 
           <Card title="Combinar cuentas" description="Si dos cuentas pertenecen al mismo autor, combínalas para reunir sus menciones, etiquetas, notas y contactos. El cambio solo aplica en este espacio de trabajo y puedes separarlas después.">
-            <form method="GET" className="flex gap-2">
-              <Input name="merge" defaultValue={mergeQ} placeholder="Buscar autores por nombre o usuario" />
+            <form method="GET" role="search" aria-label="Buscar autores para combinar" className="flex gap-2">
+              <Input name="merge" type="search" defaultValue={mergeQ} placeholder="Buscar autores por nombre o usuario" aria-label="Nombre o usuario del autor" className="min-w-0 flex-1" />
               <Button type="submit" variant="outline">Buscar</Button>
             </form>
             {candidates ? (
               others.length === 0 ? (
                 <p className="mt-3 text-sm text-muted-foreground">No hay otros autores que coincidan.</p>
               ) : (
-                <ul className="mt-3 divide-y divide-line text-sm">
+                <ul className="mt-3 divide-y text-sm">
                   {others.map((p) => (
-                    <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                      <Link href={`/people/${p.id}`} className="flex min-w-0 items-center gap-2 hover:underline">
+                    <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
+                      <Link href={`/people/${p.id}`} className="flex min-w-0 items-center gap-2 rounded-sm hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none">
                         <Avatar person={p} size="size-6" />
-                        <span className="truncate">{displayName(p)}</span>
-                        <span className="text-xs text-muted-foreground">{platformName(p.platform)} · {p.stats.mentions} menciones</span>
+                        <span className="truncate font-medium">{displayName(p)}</span>
+                        <span className="text-xs text-muted-foreground tabular-nums">{platformName(p.platform)} · {p.stats.mentions} menciones</span>
                       </Link>
-                      <span className="flex gap-1.5">
+                      <span role="group" aria-label={`Combinar con ${displayName(p)}`} className="flex flex-wrap gap-1.5">
                         <ActionForm action={mergePeople}>
                           <input type="hidden" name="from" value={p.id} />
                           <input type="hidden" name="into" value={person.id} />
-                          <SubmitButton size="sm" confirm={`¿Combinar ${displayName(p)} con ${displayName(person)}?`}>Combinar aquí</SubmitButton>
+                          <SubmitButton variant="secondary" size="sm" confirm={`¿Combinar ${displayName(p)} con ${displayName(person)}?`}>Combinar aquí</SubmitButton>
                         </ActionForm>
                         <ActionForm action={mergePeople}>
                           <input type="hidden" name="from" value={person.id} />
                           <input type="hidden" name="into" value={p.id} />
-                          <SubmitButton variant="secondary" size="sm" confirm={`¿Combinar ${displayName(person)} con ${displayName(p)}?`}>Combinar con este autor</SubmitButton>
+                          <SubmitButton variant="ghost" size="sm" confirm={`¿Combinar ${displayName(person)} con ${displayName(p)}?`}>Combinar con este autor</SubmitButton>
                         </ActionForm>
                       </span>
                     </li>
@@ -259,12 +284,13 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
   );
 }
 
+/** One fact of the public profile: a muted label over its value (a link when it has one). */
 function Fact({ label, value, href }: { label: string; value: string | null; href?: string | null }) {
   if (!value) return null;
   return (
     <div className="min-w-0">
       <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="truncate">{href ? <a href={href} target="_blank" rel="noreferrer" className="text-primary hover:underline">{value}</a> : value}</dd>
+      <dd className="mt-0.5 truncate">{href ? <a href={href} target="_blank" rel="noreferrer" className="rounded-sm text-primary hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none">{value}</a> : value}</dd>
     </div>
   );
 }

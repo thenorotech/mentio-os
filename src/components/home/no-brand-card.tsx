@@ -2,28 +2,41 @@ import { ArrowRight, Sparkles } from 'lucide-react';
 import { LinkButton } from '@/components/ui';
 import { Card as ShadcnCard, CardContent } from '@/components/ui/card';
 
+const steps = [
+  { title: 'Agrega a tu candidato', description: 'El nombre y las cuentas que quieres escuchar.' },
+  { title: 'Define a quién comparar', description: 'Los adversarios que miden tu participación de voz.' },
+  { title: 'Elige los temas', description: 'Los asuntos de campaña que quieres seguir.' },
+];
+
+/** The empty home: what to set up first, in three steps, and the one way to start. */
 export function NoBrandCard() {
   return (
-    <ShadcnCard className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card p-0">
-      <CardContent className="grid items-center gap-6 p-6 sm:p-8 @3xl:grid-cols-[1fr_auto] @3xl:p-10">
-        <div className="max-w-2xl">
-          <div className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
-            <Sparkles aria-hidden className="size-6" />
-          </div>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Empieza aquí</p>
-          <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">Configura tu campaña en 3 pasos</h2>
-          <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
-            Agrega a tu candidato, define a quién quieres comparar y elige los temas que quieres seguir. Después verás aquí cómo va la conversación.
+    <ShadcnCard className="@container">
+      <CardContent className="grid gap-6 @3xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] @3xl:items-center @3xl:gap-10">
+        <div className="max-w-xl">
+          <span aria-hidden className="mb-4 flex size-10 items-center justify-center rounded-lg bg-brand-soft text-primary">
+            <Sparkles className="size-5" />
+          </span>
+          <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">Empieza aquí</p>
+          <h2 className="mt-1 text-xl font-semibold tracking-tight text-balance">Configura tu campaña en 3 pasos</h2>
+          <p className="mt-2 text-sm leading-relaxed text-pretty text-muted-foreground">
+            Cuando termines, aquí verás cómo va la conversación sobre tu candidato.
           </p>
           <LinkButton href="/arranque" variant="primary" className="mt-5">
-            Abrir asistente <ArrowRight aria-hidden className="ml-1 size-4" />
+            Abrir asistente <ArrowRight aria-hidden className="size-4" />
           </LinkButton>
         </div>
-        <div aria-hidden="true" className="hidden size-36 items-center justify-center rounded-full border border-primary/15 bg-primary/5 @3xl:flex">
-          <div className="flex size-24 items-center justify-center rounded-full border border-primary/20 bg-background text-primary shadow-sm">
-            <span className="text-4xl font-semibold">3</span>
-          </div>
-        </div>
+        <ol className="grid gap-px overflow-hidden rounded-xl border bg-border">
+          {steps.map((step, i) => (
+            <li key={step.title} className="flex items-start gap-3 bg-card px-4 py-3">
+              <span aria-hidden className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-semibold text-muted-foreground tabular-nums">{i + 1}</span>
+              <span className="min-w-0">
+                <span className="block text-sm font-medium">{step.title}</span>
+                <span className="block text-xs text-muted-foreground">{step.description}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
       </CardContent>
     </ShadcnCard>
   );

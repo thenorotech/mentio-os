@@ -1,3 +1,4 @@
+import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { Field, Input, PageHeader, Textarea } from '@/components/ui';
 import { FormCard } from '@/components/ui/client';
@@ -35,25 +36,30 @@ export default async function Company() {
         </FormCard>
 
         <FormCard action={updateProfileAction} title="Qué hace la organización" description="Resume su trabajo en un párrafo. Esto ayuda a evaluar la relevancia de las menciones." hint="Se aplica a las menciones nuevas.">
-          <Textarea name="description" rows={4} maxLength={1000} defaultValue={company.description} placeholder="Somos el equipo de campaña de…" aria-label="A qué se dedica la organización" />
+          <Field label="A qué se dedica" hint="Hasta 1000 caracteres.">
+            <Textarea name="description" rows={4} maxLength={1000} defaultValue={company.description} placeholder="Somos el equipo de campaña de…" />
+          </Field>
         </FormCard>
 
-        <FormCard action={updateProfileAction} title="Relevancia" description="Qué temas importan a la campaña y qué adversarios comparar." hint="Escribe una indicación por línea.">
-          <Field label="Criterios de relevancia">
+        <FormCard action={updateProfileAction} title="Relevancia" description="Qué temas importan a la campaña y qué adversarios comparar." hint="Se aplica a las menciones nuevas.">
+          <Field label="Criterios de relevancia" hint="Qué cuenta como conversación relevante y qué es ruido.">
             <Textarea name="guidelines" rows={3} maxLength={2000} defaultValue={company.guidelines ?? ''} placeholder="Cuenta la conversación sobre propuestas y gestión. Excluye anuncios de empleo." />
           </Field>
           <div className="grid gap-4 @lg:grid-cols-2">
-            <Field label="Temas prioritarios">
+            <Field label="Temas prioritarios" hint="Uno por línea.">
               <Textarea name="useCases" rows={4} defaultValue={company.useCases.join('\n')} placeholder={'Seguridad pública\nTransporte y movilidad'} />
             </Field>
-            <Field label="Adversarios">
+            <Field label="Adversarios" hint="Uno por línea: nombres, apodos o nombres de campaña.">
               <Textarea name="competitors" rows={4} defaultValue={company.competitors.join('\n')} placeholder={'Nombre del adversario\nApodo o nombre de campaña'} />
             </Field>
           </div>
         </FormCard>
 
         <Collapsible>
-          <CollapsibleTrigger className="text-sm text-muted-foreground hover:text-foreground">Avanzado: texto que usa el clasificador</CollapsibleTrigger>
+          <CollapsibleTrigger className="inline-flex items-center gap-1 rounded-md text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none [&[data-panel-open]>svg]:rotate-90">
+            <ChevronRight aria-hidden className="size-4 transition-transform duration-150 motion-reduce:transition-none" />
+            Avanzado: texto que usa el clasificador
+          </CollapsibleTrigger>
           <CollapsibleContent className="mt-3">
             <FormCard action={updateContextAction} title="Contexto del clasificador" description="Se compone con los campos anteriores. Puedes editarlo; al guardar cualquier campo de arriba, se vuelve a componer." submit="Guardar contexto">
               <Textarea name="context" rows={10} maxLength={4000} defaultValue={company.context} className="font-mono text-xs" aria-label="Contexto del clasificador" />
@@ -62,7 +68,7 @@ export default async function Company() {
         </Collapsible>
 
         <p className="text-xs text-muted-foreground">
-          Los términos monitoreados en una <Link href="/settings/groups" className="text-primary hover:underline">campaña</Link> con descripción propia se evalúan con ese contexto.
+          Los términos monitoreados en una <Link href="/settings/groups" className="rounded-sm text-primary hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none">campaña</Link> con descripción propia se evalúan con ese contexto.
         </p>
       </div>
     </div>

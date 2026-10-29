@@ -28,7 +28,7 @@ import { Sparkline } from '../charts';
 import { InfoTip } from '../info-tip';
 
 export { BarList, LineChart, Sparkline, StackedBars } from '../charts';
-export { CHART_COLORS, OTHER_COLOR } from '@/lib/chart-colors';
+export { CHART_COLORS, OTHER_COLOR, SENTIMENT_COLORS } from '@/lib/chart-colors';
 export { TableCell, TableRow } from './table';
 export { Checkbox, CheckboxGroup, Combobox, DatePicker, DateTimePicker, MultiSelect, PlatformPicker, Segmented, SwitchRow, TokenInput } from './form-controls';
 

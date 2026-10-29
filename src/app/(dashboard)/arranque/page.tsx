@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { ArrowRight, Bell, ChartNoAxesColumnIncreasing, GitCompareArrows } from 'lucide-react';
-import { Badge, Card, PageHeader } from '@/components/ui';
+import { ArrowRight, Bell, ChartNoAxesColumnIncreasing, CircleCheck, GitCompareArrows, ListChecks } from 'lucide-react';
+import { LinkButton, PageHeader, SectionHeading, TONE_TEXT, cx } from '@/components/ui';
 import { ActionForm } from '@/components/ui/client';
 import { startCampaignAction } from './actions';
 import { SetupWizard } from './setup-wizard';
@@ -19,34 +19,49 @@ export default async function Arranque({ searchParams }: { searchParams: Promise
 
   if (completado === '1') {
     return (
-      <div className="mx-auto max-w-3xl space-y-6">
-        <PageHeader title="Tu tablero está listo" description="Ya puedes empezar a revisar lo que se dice de tu candidatura." />
-        <div className="grid gap-3">
-          {NEXT_STEPS.map(({ title, description, href, icon: Icon }, index) => (
-            <Link key={href} href={href} className="group block rounded-xl bg-card ring-1 ring-foreground/10 transition hover:ring-primary/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-              <Card className="transition-colors group-hover:bg-muted/20">
-                <div className="flex items-center gap-4">
-                  <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Icon className="size-5" aria-hidden="true" /></span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="font-medium">{title}</h2>
-                      <Badge tone="outline">{index + 1} de 3</Badge>
-                    </div>
-                    <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-                  </div>
-                  <ArrowRight className="size-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" aria-hidden="true" />
-                </div>
-              </Card>
-            </Link>
-          ))}
-        </div>
+      <div className="mx-auto max-w-3xl">
+        <PageHeader
+          title={(
+            <span className="inline-flex items-center gap-2">
+              <CircleCheck aria-hidden className={cx('size-6 shrink-0', TONE_TEXT.positive)} />
+              Tu tablero está listo
+            </span>
+          )}
+          description="Ya puedes empezar a revisar lo que se dice de tu candidatura."
+          actions={<LinkButton href="/" variant="primary">Ir al tablero <ArrowRight aria-hidden /></LinkButton>}
+        />
+        <section aria-labelledby="next-steps-heading" className="grid gap-3">
+          <SectionHeading id="next-steps-heading" icon={ListChecks} title="Siguientes pasos" description="Tres cosas que conviene dejar listas hoy." />
+          <ol className="grid gap-2">
+            {NEXT_STEPS.map(({ title, description, href, icon: Icon }, index) => (
+              <li key={href}>
+                <Link
+                  href={href}
+                  className="group flex items-center gap-3.5 rounded-xl border bg-card px-4 py-3.5 shadow-xs transition-colors hover:border-primary/30 hover:bg-muted/40 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                >
+                  <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-lg bg-brand-soft text-primary">
+                    <Icon className="size-4.5" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex flex-wrap items-baseline gap-x-2">
+                      <span className="text-sm font-medium">{title}</span>
+                      <span className="text-[11px] text-muted-foreground tabular-nums">Paso {index + 1} de {NEXT_STEPS.length}</span>
+                    </span>
+                    <span className="mt-0.5 block text-sm text-pretty text-muted-foreground">{description}</span>
+                  </span>
+                  <ArrowRight aria-hidden className="size-4 shrink-0 text-muted-foreground transition-[color,transform] group-hover:text-primary motion-safe:group-hover:translate-x-0.5" />
+                </Link>
+              </li>
+            ))}
+          </ol>
+        </section>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Prepara tu tablero" description="En tres pasos, reúne los nombres y temas que quieres seguir." />
+    <div className="mx-auto grid max-w-3xl">
+      <PageHeader title="Prepara tu tablero" description="En tres pasos, reúne los nombres y temas que quieres seguir. Puedes cambiarlos después." />
       <ActionForm action={startCampaignAction}>
         <SetupWizard />
       </ActionForm>
