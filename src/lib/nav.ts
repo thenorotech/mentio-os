@@ -9,6 +9,7 @@ import {
   FolderTree,
   Globe2,
   ListChecks,
+  ListTodo,
   Layers,
   LayoutDashboard,
   Map,
@@ -74,6 +75,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Configuración',
     items: [
+      { href: '/guia', label: 'Guía de configuración', icon: ListTodo },
       { href: '/arranque', label: 'Asistente de arranque', icon: Sparkles },
       { href: '/settings/company', label: 'Ajustes', icon: Settings },
     ],
