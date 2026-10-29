@@ -4,10 +4,12 @@
  * and comes back where it started. Without DATABASE_URL the app is open.
  */
 import { NextResponse, type NextFetchEvent, type NextRequest } from 'next/server';
+import type { NextAuthRequest } from 'next-auth';
 import { auth } from '@/auth';
 import { accountsEnabled } from '@/lib/accounts';
 
-const gate = auth((request) => {
+// Typing the event picks auth()'s middleware overload, not the route-handler one.
+const gate = auth((request: NextAuthRequest, _event: NextFetchEvent) => {
   if (request.auth) return NextResponse.next();
   const login = new URL('/login', request.url);
   const back = request.nextUrl.pathname + request.nextUrl.search;
