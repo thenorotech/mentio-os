@@ -24,7 +24,7 @@ export async function loadSocialPulse(): Promise<SocialPulse> {
     const { runs, metrics } = await loadLatest(SOURCE_KEYS, 1);
     return { metrics, runs: runs.length, updatedAt: runs[0]?.finishedAt ?? runs[0]?.startedAt ?? null };
   } catch (error) {
-    console.error('No se pudieron leer las recolecciones de Apify para el inicio', error);
+    console.error('No se pudieron leer las recolecciones para el inicio', error);
     return null;
   }
 }
@@ -34,7 +34,7 @@ function Shell({ updatedAt, children }: { updatedAt?: string | null; children: R
     <ShadcnCard className="min-w-0">
       <CardHeader className="border-b border-border/60 pb-3">
         <CardTitle className="flex items-center gap-2 text-sm font-semibold"><Globe2 aria-hidden className="size-4 text-primary" />Redes y web</CardTitle>
-        <CardDescription className="text-xs">Últimas recolecciones de Apify{updatedAt ? ` · actualizado ${timeAgo(updatedAt)}` : ''}.</CardDescription>
+        <CardDescription className="text-xs">Últimas recolecciones{updatedAt ? ` · actualizado ${timeAgo(updatedAt)}` : ''}.</CardDescription>
         <CardAction>
           <Link href="/redes" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
             Ver detalle <ArrowRight aria-hidden className="size-3.5" />
@@ -60,7 +60,7 @@ export async function SocialPulseCard({ pulse }: { pulse: Promise<SocialPulse> }
   if (!data) {
     return (
       <Shell>
-        <p className="py-2 text-xs text-muted-foreground">No pudimos leer las recolecciones de Apify en este momento. El resto del inicio no se ve afectado.</p>
+        <p className="py-2 text-xs text-muted-foreground">No pudimos leer las recolecciones en este momento. El resto del inicio no se ve afectado.</p>
       </Shell>
     );
   }
@@ -68,7 +68,7 @@ export async function SocialPulseCard({ pulse }: { pulse: Promise<SocialPulse> }
     return (
       <Shell>
         <EmptyState compact icon={Globe2} title="Aún no hay recolecciones terminadas" action={<LinkButton href="/redes" variant="secondary" size="sm">Abrir Redes y web</LinkButton>}>
-          Recolecta cuentas, hashtags o búsquedas con Apify para ver aquí publicaciones, interacción y la publicación destacada.
+          Recolecta cuentas, hashtags o búsquedas para ver aquí publicaciones, interacción y la publicación destacada.
         </EmptyState>
       </Shell>
     );

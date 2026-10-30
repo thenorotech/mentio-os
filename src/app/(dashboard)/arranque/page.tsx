@@ -28,7 +28,7 @@ export default async function Arranque({ searchParams }: { searchParams: Promise
               Tu tablero está listo
             </span>
           )}
-          description="Mentio ya escucha tus frases. La guía te lleva a los perfiles, eventos y alertas."
+          description="Ágora ya escucha tus frases. La guía te lleva a los perfiles, eventos y alertas."
           actions={<LinkButton href="/guia" variant="primary">Continuar la guía <ArrowRight aria-hidden /></LinkButton>}
         />
         <section aria-labelledby="next-steps-heading" className="grid gap-3">

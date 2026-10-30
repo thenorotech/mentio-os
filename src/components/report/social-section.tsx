@@ -24,7 +24,7 @@ export async function loadSocialReport(): Promise<SocialReport> {
     const { runs, metrics } = await loadLatest(SOURCE_KEYS, 1);
     return { metrics, runs: runs.length };
   } catch (error) {
-    console.error('No se pudieron leer las recolecciones de Apify para el reporte', error);
+    console.error('No se pudieron leer las recolecciones para el reporte', error);
     return null;
   }
 }
@@ -79,7 +79,7 @@ export async function SocialReportSection({ report }: { report: Promise<SocialRe
   if (!data.runs) {
     return (
       <section className={sectionClass} aria-labelledby="report-social-heading">
-        <Heading id="report-social-heading" icon={Globe2} title="Redes sociales y web" description="Publicaciones, prensa y Google recolectados con Apify." />
+        <Heading id="report-social-heading" icon={Globe2} title="Redes sociales y web" description="Publicaciones, prensa y buscadores recolectados por Ágora." />
         <p className={`${styles.muted} text-sm text-muted-foreground`}>
           Aún no hay recolecciones terminadas. Inicia una en <Link href="/redes" className="font-medium text-primary hover:underline">Redes y web</Link> para sumarlas a este reporte.
         </p>
@@ -98,7 +98,7 @@ export async function SocialReportSection({ report }: { report: Promise<SocialRe
   return (
     <>
       <section className={sectionClass} aria-labelledby="report-social-heading">
-        <Heading id="report-social-heading" icon={Globe2} title="Redes sociales y web" description={`${period} · última recolección de cada fuente en Apify.`} />
+        <Heading id="report-social-heading" icon={Globe2} title="Redes sociales y web" description={`${period} · última recolección de cada fuente.`} />
         <p className="max-w-3xl text-sm leading-6">{socialTakeaway(m)}</p>
         <dl className="mt-4 grid grid-cols-2 gap-3 @2xl:grid-cols-4">
           <Figure label="Publicaciones" value={compact(t.posts)} hint={`${compact(t.authors)} autores`} />

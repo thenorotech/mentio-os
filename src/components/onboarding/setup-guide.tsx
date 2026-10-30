@@ -29,11 +29,11 @@ const STEPS: Record<SetupStepKey, StepCopy> = {
   conexiones: {
     title: 'Conecta las fuentes',
     icon: PlugZap,
-    summary: 'Mentio escucha menciones de forma continua; Apify recorre redes, Google y prensa bajo demanda.',
-    where: ['Servidor', '.env.local', 'MENTIO_API_KEY · APIFY_TOKEN'],
+    summary: 'El motor de escucha sigue menciones de forma continua; el recolector recorre redes, buscadores y prensa bajo demanda.',
+    where: ['Servidor', 'Variables de entorno'],
     how: [
-      'MENTIO_API_KEY habilita la escucha de frases, alertas y análisis.',
-      'APIFY_TOKEN habilita el crawling de perfiles, hashtags, búsquedas y noticias (Apify › Settings › API & Integrations).',
+      'La credencial de escucha habilita frases, alertas y análisis.',
+      'La credencial de recolección habilita perfiles, hashtags, búsquedas y noticias.',
       'Ambas claves se quedan en el servidor; nadie las escribe en el tablero.',
     ],
     action: () => null,
@@ -41,7 +41,7 @@ const STEPS: Record<SetupStepKey, StepCopy> = {
   candidatura: {
     title: 'Frases de la entidad',
     icon: UserRound,
-    summary: 'El nombre oficial, siglas y variantes con los que la gente nombra a la entidad. Cada una es una frase que Mentio rastrea.',
+    summary: 'El nombre oficial, siglas y variantes con los que la gente nombra a la entidad. Cada una es una frase que Ágora rastrea.',
     where: ['Configuración', 'Asistente de arranque'],
     how: [
       'El asistente crea el monitoreo y una frase por nombre o variante.',
@@ -65,11 +65,11 @@ const STEPS: Record<SetupStepKey, StepCopy> = {
   perfiles: {
     title: 'Perfiles en redes',
     icon: UsersRound,
-    summary: 'Las cuentas que Apify recorre en Instagram, Facebook, X, TikTok y YouTube: la entidad, sus voceros y medios locales.',
+    summary: 'Las cuentas que Ágora recorre en Instagram, Facebook, X, TikTok y YouTube: la entidad, sus voceros y medios locales.',
     where: ['Redes y web', 'Panorama', 'Nueva recolección'],
     how: [
       'Escribe @cuenta o pega la URL del perfil; cada fuente toma solo lo que acepta.',
-      'Cada recolección guarda publicaciones, likes, comentarios y vistas en Apify.',
+      'Cada recolección guarda publicaciones, likes, comentarios y vistas.',
       'Repite la recolección para actualizar el Panorama y la Comparativa.',
     ],
     action: (primary) => (
@@ -82,12 +82,12 @@ const STEPS: Record<SetupStepKey, StepCopy> = {
   eventos: {
     title: 'Eventos y búsquedas',
     icon: Hash,
-    summary: 'Cierres, obras, tarifas o filas en los cruces: hashtags y frases que Apify busca en redes, Google y noticias.',
+    summary: 'Cierres, obras, tarifas o filas en los cruces: hashtags y frases que Ágora busca en redes, buscadores y noticias.',
     where: ['Redes y web', 'Panorama', 'Nueva recolección'],
     how: [
       '#hashtag para redes; texto libre (“Puente Zaragoza”) para Google, Noticias y X.',
       'Elige el periodo (24 h, 7 o 30 días) para acotar el evento.',
-      'Consulta cada corrida y expórtala en Redes y web › Recolecciones.',
+      'Consulta cada recolección y expórtala en Redes y web › Recolecciones.',
     ],
     action: (primary) => (
       <NewScrapeButton

@@ -22,7 +22,7 @@ const duration = (from: string | null, to: string | null) => {
 /** Every Apify run of every source, newest first. */
 export default async function Recolecciones({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
-  const header = <PageHeader title="Recolecciones" back={{ href: '/redes', label: 'Redes y web' }} description="Cada corrida de Apify: qué fuente, cuándo, cuántos resultados y cuánto costó." actions={apifyConfigured() ? <NewScrapeButton /> : undefined} />;
+  const header = <PageHeader title="Recolecciones" back={{ href: '/redes', label: 'Redes y web' }} description="Cada recolección: qué fuente, cuándo y cuántos resultados." actions={apifyConfigured() ? <NewScrapeButton /> : undefined} />;
   if (!apifyConfigured()) return <div>{header}<ApifySetup /></div>;
 
   const chosen = many(params, 'sources').filter(isSourceKey);
@@ -39,12 +39,12 @@ export default async function Recolecciones({ searchParams }: { searchParams: Pr
         reset={[]}
         filters={[{ param: 'sources', label: 'Fuente', icon: 'platform', kind: 'multi', options: SOURCE_LIST.map((s) => ({ value: s.key, label: s.label, platform: s.platform })) }]}
       />
-      {failed.length ? <Notice tone="warn" className="mb-4">No se pudieron leer las corridas de {failed.map((s) => SOURCES[s].label).join(', ')}.</Notice> : null}
+      {failed.length ? <Notice tone="warn" className="mb-4">No se pudieron leer las recolecciones de {failed.map((s) => SOURCES[s].label).join(', ')}.</Notice> : null}
 
       {runs.length === 0 ? (
         <EmptyState icon={Globe2} title="Aún no hay recolecciones">Inicia una con el botón de arriba: elige fuentes y qué cuentas, hashtags o búsquedas seguir.</EmptyState>
       ) : (
-        <Table head={['Fuente', 'Estado', 'Inicio', 'Duración', 'Resultados', 'Costo']}>
+        <Table head={['Fuente', 'Estado', 'Inicio', 'Duración', 'Resultados']}>
           {runs.map((r) => (
             <TableRow key={r.id}>
               <TableCell className={td}>
@@ -57,7 +57,6 @@ export default async function Recolecciones({ searchParams }: { searchParams: Pr
               <TableCell className={`${td} text-xs text-muted-foreground`}>{r.startedAt ? date(r.startedAt) : '—'}</TableCell>
               <TableCell className={`${td} text-xs tabular-nums text-muted-foreground`}>{duration(r.startedAt, r.finishedAt)}</TableCell>
               <TableCell className={`${td} tabular-nums`}>{compact(r.items)}</TableCell>
-              <TableCell className={`${td} text-xs tabular-nums text-muted-foreground`}>{r.costUsd === null ? '—' : `$${r.costUsd.toFixed(3)}`}</TableCell>
             </TableRow>
           ))}
         </Table>

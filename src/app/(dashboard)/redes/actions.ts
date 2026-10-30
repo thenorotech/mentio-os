@@ -30,7 +30,7 @@ export async function startScrapeAction(_: ActionState, form: FormData): Promise
     const failed = plan.filter((_, i) => settled[i].status === 'rejected').map((p) => SOURCES[p.source].label);
     revalidatePath('/redes');
     revalidatePath('/redes/recolecciones');
-    if (started.length === 0) throw new Error(`No se pudo iniciar en ${failed.join(', ')}. Revisa el token y los actores de Apify.`);
+    if (started.length === 0) throw new Error(`No se pudo iniciar en ${failed.join(', ')}. Inténtalo de nuevo más tarde.`);
     const notes = [failed.length ? `falló en ${failed.join(', ')}` : '', skipped.length ? `${skipped.join(', ')} sin objetivos compatibles` : ''].filter(Boolean);
     return `Recolección iniciada en ${started.join(', ')}${notes.length ? `; ${notes.join('; ')}` : ''}. Los resultados aparecen al terminar.`;
   });

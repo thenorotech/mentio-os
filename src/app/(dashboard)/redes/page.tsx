@@ -24,7 +24,7 @@ const DEPTHS = [
 export default async function Redes({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
   const header = (actions?: ReactNode) => (
-    <PageHeader title="Redes y web" description="Métricas de lo que se publica sobre la campaña en redes sociales, prensa y Google, recolectado con Apify." actions={actions} />
+    <PageHeader title="Redes y web" description="Métricas de lo que se publica sobre la campaña en redes sociales, prensa y Google, recolectado por Ágora." actions={actions} />
   );
   if (!apifyConfigured()) return <div>{header()}<ApifySetup /></div>;
 
@@ -52,13 +52,13 @@ export default async function Redes({ searchParams }: { searchParams: Promise<Se
 
       {failed.length ? (
         <Notice tone="warn" className="mb-4" title="Algunas fuentes no respondieron">
-          {failed.map((s) => SOURCES[s].label).join(', ')}: revisa que el actor exista en tu cuenta de Apify o cámbialo con <code className="font-mono text-xs">APIFY_ACTOR_&lt;FUENTE&gt;</code>.
+          {failed.map((s) => SOURCES[s].label).join(', ')}: la fuente no respondió; inténtalo más tarde.
         </Notice>
       ) : null}
 
       {runs.length === 0 ? (
         <EmptyState icon={Globe2} title="Aún no hay recolecciones terminadas" example="Recolecta @candidata y #seguridad en Instagram, X y TikTok para ver qué publicaciones generan más interacción." action={<NewScrapeButton primary={false} />}>
-          Inicia una recolección: Apify trae las publicaciones y aquí aparecen sus métricas.
+          Inicia una recolección: las publicaciones y sus métricas aparecen aquí.
         </EmptyState>
       ) : (
         <>

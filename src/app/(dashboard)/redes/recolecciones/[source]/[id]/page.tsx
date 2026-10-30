@@ -24,7 +24,7 @@ export default async function Recoleccion({ params }: { params: Promise<{ source
   if (!run) notFound();
   const [targets, items] = await Promise.all([runTargets(run), run.datasetId ? runItems(run) : Promise.resolve([])]);
   const live = isRunning(run.status);
-  const meta = [run.startedAt ? `Iniciada ${date(run.startedAt)}` : null, `${compact(run.items)} resultados`, run.costUsd === null ? null : `$${run.costUsd.toFixed(3)} USD`].filter(Boolean).join(' · ');
+  const meta = [run.startedAt ? `Iniciada ${date(run.startedAt)}` : null, `${compact(run.items)} resultados`].filter(Boolean).join(' · ');
 
   return (
     <div className="space-y-6">
@@ -40,7 +40,7 @@ export default async function Recoleccion({ params }: { params: Promise<{ source
               <ActionForm action={abortScrapeAction}>
                 <input type="hidden" name="source" value={source} />
                 <input type="hidden" name="id" value={run.id} />
-                <SubmitButton variant="danger" confirm="La corrida se detiene y conserva lo que ya recolectó.">Detener</SubmitButton>
+                <SubmitButton variant="danger" confirm="La recolección se detiene y conserva lo que ya obtuvo.">Detener</SubmitButton>
               </ActionForm>
             ) : null}
           </>
@@ -49,14 +49,14 @@ export default async function Recoleccion({ params }: { params: Promise<{ source
       <Conditions conditions={targets} max={6} empty="Sin objetivos registrados" />
 
       {run.status === 'FAILED' || run.status === 'TIMED-OUT' ? (
-        <Notice tone="bad" title="La corrida no terminó">Revisa el registro de la corrida en la consola de Apify; lo que alcanzó a recolectar se muestra abajo.</Notice>
+        <Notice tone="bad" title="La recolección no terminó">Lo que alcanzó a recolectar se muestra abajo.</Notice>
       ) : null}
 
       {items.length ? (
         <MetricsView metrics={computeMetrics(items, timeZone())} timeZone={timeZone()} />
       ) : (
         <EmptyState compact title={live ? 'Recolectando…' : 'Sin resultados'}>
-          {live ? 'Esta página se actualiza sola mientras Apify trabaja.' : 'La fuente no devolvió resultados para estos objetivos.'}
+          {live ? 'Esta página se actualiza sola mientras se recolecta.' : 'La fuente no devolvió resultados para estos objetivos.'}
         </EmptyState>
       )}
     </div>

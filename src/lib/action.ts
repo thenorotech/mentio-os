@@ -28,7 +28,7 @@ export async function run(work: () => Promise<string | void>): Promise<ActionSta
       : undefined;
     if (Number.isFinite(status)) return { error: apiErrorMessage(status), at: Date.now() };
     const message = error instanceof Error ? error.message : 'Ocurrió un error inesperado.';
-    if (/mentio|https?:|\/v1\//i.test(message)) {
+    if (/mentio|apify|https?:|\/v[12]\//i.test(message)) {
       console.error('Error interno en una acción', message);
       return { error: apiErrorMessage(), at: Date.now() };
     }
