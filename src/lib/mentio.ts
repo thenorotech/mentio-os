@@ -16,7 +16,8 @@ if (typeof window !== 'undefined') {
 
 async function apiKey(): Promise<string> {
   if (accountsEnabled() && !(await currentAccount())) throw new Error('Tu sesión terminó. Vuelve a entrar.');
-  const key = process.env.MENTIO_API_KEY;
+  // A pasted key often carries quotes, a "Bearer " prefix or a trailing newline; the API rejects all three.
+  const key = process.env.MENTIO_API_KEY?.trim().replace(/^["']|["']$/g, '').replace(/^Bearer\s+/i, '').trim();
   if (!key) {
     throw new Error('La clave de API no está configurada. Copia .env.example a .env.local y agrega tu clave.');
   }
