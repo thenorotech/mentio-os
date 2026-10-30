@@ -6,10 +6,10 @@ import type { RunStatus } from '@/lib/apify';
 import { SOURCE_KEYS, SOURCE_LIST, type SourceKey } from '@/lib/scraping/sources';
 import { startScrapeAction } from './actions';
 
-export function ApifySetup() {
+export function ScrapingSetup() {
   return (
-    <Notice tone="warn" title="Conecta Apify para recolectar redes y web">
-      Crea un token en Apify (Settings › API &amp; Integrations) y agrégalo como <code className="font-mono text-xs">APIFY_TOKEN</code> en <code className="font-mono text-xs">.env.local</code>. El token se queda en el servidor. Con <code className="font-mono text-xs">npm run demo</code> puedes probar con datos de ejemplo.
+    <Notice tone="warn" title="La recolección de redes y web no está activa">
+      Pide al equipo de Ágora que la habilite para tu espacio de trabajo.
     </Notice>
   );
 }
@@ -49,15 +49,15 @@ type ScrapePreset = { label?: string; sources?: readonly SourceKey[]; placeholde
 export function NewScrapeButton({ primary = true, preset = {} }: { primary?: boolean; preset?: ScrapePreset }) {
   const label = preset.label ?? 'Nueva recolección';
   return (
-    <DrawerButton create={primary} variant={primary ? 'primary' : 'secondary'} label={label} icon={<Plus />} title={label} description="Apify recolecta en segundo plano; los resultados aparecen en el panorama al terminar.">
+    <DrawerButton create={primary} variant={primary ? 'primary' : 'secondary'} label={label} icon={<Plus />} title={label} description="Ágora recolecta en segundo plano; los resultados aparecen en el panorama al terminar.">
       <ActionForm action={startScrapeAction} className="grid gap-5">
-        <Field label="Fuentes" group hint="Redes por cuenta, hashtag o búsqueda; YouTube por búsqueda o canal; Google y Noticias por búsqueda. Cada fuente es una corrida de Apify.">
+        <Field label="Fuentes" group hint="Redes por cuenta, hashtag o búsqueda; YouTube por búsqueda o canal; Google y Noticias por búsqueda. Cada fuente es una corrida.">
           <PlatformPicker name="sources" options={SOURCE_KEYS} defaultValue={preset.sources ?? ['instagram', 'facebook', 'x', 'tiktok']} labels={SOURCE_LABELS} />
         </Field>
         <Field label="Qué recolectar" hint="@cuenta para perfiles, #tema para hashtags, texto para búsquedas, o una URL. Enter agrega cada uno.">
           <TokenInput name="targets" placeholder={preset.placeholder ?? '@candidata, #seguridad, “propuesta de agua”'} max={20} splitOnComma={false} />
         </Field>
-        <Field label="Resultados por objetivo" hint="Por cada cuenta, hashtag o búsqueda, en cada fuente. Más resultados cuestan más créditos de Apify.">
+        <Field label="Resultados por objetivo" hint="Por cada cuenta, hashtag o búsqueda, en cada fuente. Más resultados cuestan más créditos.">
           <Input name="limit" type="number" min={1} max={500} defaultValue={50} required />
         </Field>
         <Field label="Periodo" group>

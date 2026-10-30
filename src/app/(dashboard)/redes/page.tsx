@@ -9,7 +9,7 @@ import { many, one, withParams, type SearchParams } from '@/lib/params';
 import { SOURCES, SOURCE_KEYS, SOURCE_LIST, isSourceKey } from '@/lib/scraping/sources';
 import { loadLatest, timeZone } from './data';
 import { MetricsView } from './metrics-view';
-import { ApifySetup, NewScrapeButton } from './parts';
+import { ScrapingSetup, NewScrapeButton } from './parts';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Redes y web' };
@@ -24,9 +24,9 @@ const DEPTHS = [
 export default async function Redes({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
   const header = (actions?: ReactNode) => (
-    <PageHeader title="Redes y web" description="Métricas de lo que se publica sobre la campaña en redes sociales, prensa y Google, recolectado con Apify." actions={actions} />
+    <PageHeader title="Redes y web" description="Métricas de lo que se publica sobre la campaña en redes sociales, prensa y Google." actions={actions} />
   );
-  if (!apifyConfigured()) return <div>{header()}<ApifySetup /></div>;
+  if (!apifyConfigured()) return <div>{header()}<ScrapingSetup /></div>;
 
   const chosen = many(params, 'sources').filter(isSourceKey);
   const sources = chosen.length ? chosen : [...SOURCE_KEYS];
@@ -52,13 +52,13 @@ export default async function Redes({ searchParams }: { searchParams: Promise<Se
 
       {failed.length ? (
         <Notice tone="warn" className="mb-4" title="Algunas fuentes no respondieron">
-          {failed.map((s) => SOURCES[s].label).join(', ')}: revisa que el actor exista en tu cuenta de Apify o cámbialo con <code className="font-mono text-xs">APIFY_ACTOR_&lt;FUENTE&gt;</code>.
+          {failed.map((s) => SOURCES[s].label).join(', ')}: no se pudieron leer por ahora. Intenta de nuevo más tarde.
         </Notice>
       ) : null}
 
       {runs.length === 0 ? (
         <EmptyState icon={Globe2} title="Aún no hay recolecciones terminadas" example="Recolecta @candidata y #seguridad en Instagram, X y TikTok para ver qué publicaciones generan más interacción." action={<NewScrapeButton primary={false} />}>
-          Inicia una recolección: Apify trae las publicaciones y aquí aparecen sus métricas.
+          Inicia una recolección: Ágora trae las publicaciones y aquí aparecen sus métricas.
         </EmptyState>
       ) : (
         <>

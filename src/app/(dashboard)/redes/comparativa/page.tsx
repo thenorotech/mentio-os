@@ -12,7 +12,7 @@ import { many, one, withParams, type SearchParams } from '@/lib/params';
 import { compareTargets, type TargetKind, type TargetRow } from '@/lib/scraping/compare';
 import { SOURCES, SOURCE_KEYS, SOURCE_LIST, interactions, isSourceKey, type ScrapedItem } from '@/lib/scraping/sources';
 import { loadTagged, timeZone } from '../data';
-import { ApifySetup, NewScrapeButton } from '../parts';
+import { ScrapingSetup, NewScrapeButton } from '../parts';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Comparativa' };
@@ -104,7 +104,7 @@ export default async function Comparativa({ searchParams }: { searchParams: Prom
       actions={actions}
     />
   );
-  if (!apifyConfigured()) return <div>{header()}<ApifySetup /></div>;
+  if (!apifyConfigured()) return <div>{header()}<ScrapingSetup /></div>;
 
   const chosenSources = many(params, 'sources').filter(isSourceKey);
   const sources = chosenSources.length ? chosenSources : [...SOURCE_KEYS];
@@ -150,7 +150,7 @@ export default async function Comparativa({ searchParams }: { searchParams: Prom
 
       {failed.length ? (
         <Notice tone="warn" className="mb-4" title="Algunas fuentes no respondieron">
-          {failed.map((s) => SOURCES[s].label).join(', ')}: revisa que el actor exista en tu cuenta de Apify o cámbialo con <code className="font-mono text-xs">APIFY_ACTOR_&lt;FUENTE&gt;</code>.
+          {failed.map((s) => SOURCES[s].label).join(', ')}: no se pudieron leer por ahora. Intenta de nuevo más tarde.
         </Notice>
       ) : null}
 
@@ -170,7 +170,7 @@ export default async function Comparativa({ searchParams }: { searchParams: Prom
             {picked.length === 0 && everyone.rows.length > DEFAULT_TARGETS ? ` · se comparan los ${DEFAULT_TARGETS} objetivos con más interacción de ${everyone.rows.length}; elige otros en el filtro Objetivo` : ''}
           </p>
 
-          <Card title={label('Participación de voz', 'Qué parte del total se lleva cada objetivo, entre los que comparas. Una publicación que menciona a dos objetivos cuenta para ambos. Fuente: publicaciones en redes recolectadas con Apify.')}>
+          <Card title={label('Participación de voz', 'Qué parte del total se lleva cada objetivo, entre los que comparas. Una publicación que menciona a dos objetivos cuenta para ambos. Fuente: publicaciones en redes recolectadas por Ágora.')}>
             <div className="space-y-5">
               <div className="space-y-2">
                 <h3 className="text-xs font-medium text-muted-foreground">Por interacciones</h3>
@@ -225,7 +225,7 @@ export default async function Comparativa({ searchParams }: { searchParams: Prom
             ) : null}
           </section>
 
-          <Card title={label('Publicaciones por día', 'Cuántas publicaciones atribuidas a cada objetivo salieron cada día. Fuente: datasets de Apify.')} description={`Días en ${zone}.`}>
+          <Card title={label('Publicaciones por día', 'Cuántas publicaciones atribuidas a cada objetivo salieron cada día. Fuente: recolecciones de Ágora.')} description={`Días en ${zone}.`}>
             <LineChart labels={days} series={rows.map((r) => ({ name: r.target.label, values: r.daily, color: colorOf(r) }))} height={240} />
           </Card>
 
@@ -239,7 +239,7 @@ export default async function Comparativa({ searchParams }: { searchParams: Prom
                     <span className="inline-flex items-center gap-2">
                       <Dot color={colorOf(r)} />
                       {r.target.label}
-                      <InfoTip text={`La publicación con más likes, comentarios y compartidos atribuida a ${r.target.label}, de las recolecciones de Apify.`} />
+                      <InfoTip text={`La publicación con más likes, comentarios y compartidos atribuida a ${r.target.label}, de las recolecciones de Ágora.`} />
                     </span>
                   }
                 >

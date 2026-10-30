@@ -54,7 +54,7 @@ function isBlocked(key: SetupStepKey, s: SetupSignals): boolean {
 
 function factsOf(key: SetupStepKey, s: SetupSignals): string[] {
   switch (key) {
-    case 'conexiones': return [s.mentio ? 'Mentio conectado' : 'Mentio sin conexión', s.apify ? 'Apify conectado' : 'Apify sin token'];
+    case 'conexiones': return [s.mentio ? 'Escucha conectada' : 'Escucha sin conexión', s.apify ? 'Recolección conectada' : 'Recolección inactiva'];
     case 'candidatura': return s.brands ? [plural(s.brands, 'frase del candidato', 'frases del candidato')] : [];
     case 'contraste': return [plural(s.competitors, 'frase de adversario', 'frases de adversarios'), plural(s.topics, 'tema', 'temas')].filter((_, i) => (i ? s.topics : s.competitors) > 0);
     case 'perfiles': return s.profiles ? [plural(s.profiles, 'perfil recolectado', 'perfiles recolectados')] : [];

@@ -8,7 +8,7 @@ import { compact, date } from '@/lib/format';
 import { many, type SearchParams } from '@/lib/params';
 import { SOURCES, SOURCE_KEYS, SOURCE_LIST, isSourceKey } from '@/lib/scraping/sources';
 import { AutoRefresh } from '../auto-refresh';
-import { ApifySetup, NewScrapeButton, RunStatusBadge } from '../parts';
+import { ScrapingSetup, NewScrapeButton, RunStatusBadge } from '../parts';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Recolecciones' };
@@ -22,8 +22,8 @@ const duration = (from: string | null, to: string | null) => {
 /** Every Apify run of every source, newest first. */
 export default async function Recolecciones({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
-  const header = <PageHeader title="Recolecciones" back={{ href: '/redes', label: 'Redes y web' }} description="Cada corrida de Apify: qué fuente, cuándo, cuántos resultados y cuánto costó." actions={apifyConfigured() ? <NewScrapeButton /> : undefined} />;
-  if (!apifyConfigured()) return <div>{header}<ApifySetup /></div>;
+  const header = <PageHeader title="Recolecciones" back={{ href: '/redes', label: 'Redes y web' }} description="Cada corrida: qué fuente, cuándo, cuántos resultados y cuánto costó." actions={apifyConfigured() ? <NewScrapeButton /> : undefined} />;
+  if (!apifyConfigured()) return <div>{header}<ScrapingSetup /></div>;
 
   const chosen = many(params, 'sources').filter(isSourceKey);
   const listed = await listAllRuns(chosen.length ? chosen : SOURCE_KEYS, { limit: 25 });

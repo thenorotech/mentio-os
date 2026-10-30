@@ -9,7 +9,7 @@ import { at, count, isObj, list, text, when } from '@/lib/scraping/read';
 import { SOURCES, SOURCE_KEYS, type Json, type ScrapeRequest, type SourceKey } from '@/lib/scraping/sources';
 
 if (typeof window !== 'undefined') {
-  throw new Error('Este módulo solo se ejecuta en el servidor: el token de Apify nunca debe llegar al navegador.');
+  throw new Error('Este módulo solo se ejecuta en el servidor: el token nunca debe llegar al navegador.');
 }
 
 const STATUSES = ['READY', 'RUNNING', 'SUCCEEDED', 'FAILED', 'ABORTING', 'ABORTED', 'TIMING-OUT', 'TIMED-OUT'] as const;
@@ -45,7 +45,7 @@ const actorPath = (source: SourceKey) => encodeURIComponent(actorFor(source).rep
 
 async function request(path: string, init: { method?: 'GET' | 'POST'; body?: Json } = {}): Promise<unknown> {
   const token = process.env.APIFY_TOKEN;
-  if (!token) throw new Error('El token de Apify no está configurado. Agrega APIFY_TOKEN a .env.local.');
+  if (!token) throw new Error('La recolección no está configurada.');
   const base = (process.env.APIFY_API_URL || 'https://api.apify.com').replace(/\/$/, '');
   const response = await fetch(`${base}/v2${path}`, {
     method: init.method ?? 'GET',
@@ -56,7 +56,7 @@ async function request(path: string, init: { method?: 'GET' | 'POST'; body?: Jso
   if (!response.ok) {
     // Apify's own message stays in the server log; the page shows a localized one.
     const detail = await response.text().catch(() => '');
-    console.error('Error de Apify', { status: response.status, path: path.split('?')[0], detail: detail.slice(0, 300) });
+    console.error('Error del servicio de recolección', { status: response.status, path: path.split('?')[0], detail: detail.slice(0, 300) });
     const error = new Error(apiErrorMessage(response.status)) as Error & { apiStatus?: number };
     error.apiStatus = response.status;
     throw error;

@@ -108,7 +108,7 @@ export function MetricsView({ metrics: m, timeZone }: { metrics: ScrapeMetrics; 
 
       {t.posts ? (
         <Section title="Redes sociales">
-          <Card title={label('Publicaciones por día', 'Cuántas publicaciones salieron cada día, por red. Fuente: datasets de Apify.')} description={`Días en ${timeZone}.`}>
+          <Card title={label('Publicaciones por día', 'Cuántas publicaciones salieron cada día, por red. Fuente: recolecciones de Ágora.')} description={`Días en ${timeZone}.`}>
             <StackedBars labels={m.days} stacks={stacks} />
           </Card>
           <div className="grid gap-4 @4xl:grid-cols-2">
